@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* LIGHT */
+:root {
+  --bg: #F8FAFC;
+  --text: #0F172A;
+  --card: #FFFFFF;
+  --border: #E2E8F0;
+  --primary: #4F8EF7;
+}
+
+/* DARK */
+.dark {
+  --bg: #0D0F14;
+  --text: #E8EAF0;
+  --card: #020617;
+  --border: #1E2130;
+  --primary: #4F8EF7;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+
+/* Interview Room */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px rgba(79, 142, 247, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(79, 142, 247, 0.6); }
+  100% { box-shadow: 0 0 10px rgba(79, 142, 247, 0.2); }
+}
+
+@keyframes wave {
+  0%, 100% { height: 6px; }
+  50% { height: 20px; }
+}
+
+.wave-bar {
+  width: 4px;
+  background: linear-gradient(to top, #4F8EF7, #A855F7);
+  animation: wave 1s infinite ease-in-out;
+}
