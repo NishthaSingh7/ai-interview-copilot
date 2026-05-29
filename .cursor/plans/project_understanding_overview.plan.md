@@ -16,6 +16,7 @@ todos:
     status: completed
 isProject: true
 lastUpdated: "2026-05-29"
+githubRepo: "https://github.com/NishthaSingh7/ai-interview-copilot"
 ---
 
 # AI Interview Copilot — Project Understanding
@@ -34,6 +35,8 @@ lastUpdated: "2026-05-29"
 | 2026-05-29 | Cleanup: deleted unused `ResumeUpload.tsx` and `RoleSelector.tsx` |
 | 2026-05-29 | Backend: `StartInterviewRequest` Pydantic model wired in `/start-interview` |
 | 2026-05-29 | Frontend: `Home.tsx` resume upload now uses shared `api` axios client |
+| 2026-05-29 | Git init + first commit on `main` |
+| 2026-05-29 | Private GitHub repo created and pushed: `NishthaSingh7/ai-interview-copilot` |
 
 ---
 
@@ -143,7 +146,7 @@ ai-interview-copilot/
 | Session history / persistence | `localStorage` only |
 | User authentication | None |
 | Route guards | None |
-| Git init / GitHub remote | Not yet done |
+| Git init / GitHub remote | Done — [github.com/NishthaSingh7/ai-interview-copilot](https://github.com/NishthaSingh7/ai-interview-copilot) (private) |
 
 ---
 
@@ -209,8 +212,8 @@ sequenceDiagram
 | Project README | Done |
 | API key not logged to stdout | Done |
 | `backend/.env` excluded from git | Done (via `.gitignore`) |
-| `git init` | Pending |
-| GitHub remote / first push | Pending |
+| `git init` | Done |
+| GitHub remote / first push | Done (private, `main`) |
 
 **Note:** If the API key was ever shared or committed elsewhere, rotate it in Google AI Studio.
 
