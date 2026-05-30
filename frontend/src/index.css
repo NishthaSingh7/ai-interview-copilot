@@ -49,3 +49,594 @@ body {
   background: linear-gradient(to top, #4F8EF7, #A855F7);
   animation: wave 1s infinite ease-in-out;
 }
+
+.interview-glow {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+/* —— Interview room —— */
+.interview-room {
+  position: relative;
+  background: var(--bg);
+}
+
+.interview-room-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(79, 142, 247, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 142, 247, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent);
+  pointer-events: none;
+}
+
+.interview-room-spotlight {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120%;
+  height: 55%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(79, 142, 247, 0.12) 0%,
+    rgba(168, 85, 247, 0.06) 35%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.dark .interview-room-spotlight {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(79, 142, 247, 0.18) 0%,
+    rgba(168, 85, 247, 0.08) 40%,
+    transparent 70%
+  );
+}
+
+.interview-stage {
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  padding: 2rem 1.5rem;
+  background: color-mix(in srgb, var(--card) 85%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary) 8%, transparent),
+    0 24px 48px -24px rgba(79, 142, 247, 0.2);
+}
+
+.interview-avatar-ring {
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, var(--primary), #a855f7);
+  margin: 0 auto;
+}
+
+.interview-avatar-ring-active {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+.interview-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #1e293b 0%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark .interview-avatar {
+  background: linear-gradient(160deg, #1e293b 0%, #020617 100%);
+}
+
+.interview-avatar-sm {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.interview-badge-waiting {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.interview-badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+}
+
+.interview-cta-primary {
+  padding: 0.875rem 1.75rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+  box-shadow: 0 8px 24px -8px rgba(79, 142, 247, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s;
+}
+
+.interview-cta-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -8px rgba(79, 142, 247, 0.65);
+}
+
+.interview-cta-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.interview-cta-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.interview-btn-stop {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #ef4444;
+  transition: background 0.15s;
+}
+
+.interview-btn-stop:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.interview-btn-ghost {
+  padding: 0.875rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  opacity: 0.85;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.interview-btn-ghost:hover:not(:disabled) {
+  opacity: 1;
+  background: color-mix(in srgb, var(--card) 80%, var(--border));
+}
+
+.interview-tip-card {
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+}
+
+.interview-alert {
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.interview-panel {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.interviewer-panel {
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.candidate-panel {
+  min-height: 280px;
+}
+
+.feedback-panel {
+  border-color: color-mix(in srgb, #22c55e 20%, var(--border));
+}
+
+.interview-question-text {
+  animation: fadeSlideIn 0.4s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.interview-textarea {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  resize: vertical;
+  min-height: 140px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.interview-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+.interview-progress-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.interview-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--primary), #a855f7);
+  transition: width 0.4s ease;
+}
+
+.interview-score-ring {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.interview-loading-step {
+  animation: fadeSlideIn 0.5s ease-out backwards;
+}
+
+.interview-readiness {
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px dashed var(--border);
+  background: color-mix(in srgb, var(--card) 50%, transparent);
+}
+
+/* —— Home —— */
+.home-hero-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+  background: color-mix(in srgb, var(--primary) 8%, var(--card));
+  color: var(--primary);
+}
+
+.home-stat-card {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 85%, transparent);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.home-stat-card-highlight {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  box-shadow: 0 0 24px -8px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+.home-setup-card {
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  padding: 1.75rem 1.5rem;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 48px -32px rgba(79, 142, 247, 0.15);
+}
+
+.home-setup-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.home-setup-dots span {
+  width: 2rem;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--border);
+  transition: background 0.25s, width 0.25s;
+}
+
+.home-setup-dots span.done {
+  background: linear-gradient(90deg, var(--primary), #a855f7);
+  width: 2.5rem;
+}
+
+.home-step-num {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--card);
+  flex-shrink: 0;
+}
+
+.home-step-num-done {
+  background: color-mix(in srgb, #22c55e 15%, var(--card));
+  border-color: color-mix(in srgb, #22c55e 40%, var(--border));
+  color: #22c55e;
+}
+
+.home-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.home-dropzone:hover {
+  border-color: color-mix(in srgb, var(--primary) 50%, var(--border));
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
+}
+
+.home-dropzone-done {
+  border-style: solid;
+  border-color: color-mix(in srgb, #22c55e 35%, var(--border));
+  background: color-mix(in srgb, #22c55e 6%, transparent);
+}
+
+.home-dropzone-loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.home-dropzone-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--primary) 10%, var(--card));
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.home-dropzone-btn {
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.home-role-chip {
+  text-align: left;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  font-size: 0.875rem;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.home-role-chip:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+}
+
+.home-role-chip-active {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* —— Site footer —— */
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 90%, var(--bg));
+  padding: 0.875rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.site-footer-text {
+  font-size: 0.8125rem;
+  opacity: 0.75;
+}
+
+.site-footer-sub {
+  font-size: 0.75rem;
+  opacity: 0.45;
+}
+
+/* —— Feedback —— */
+.feedback-score-hero {
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.feedback-score-ring-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.feedback-score-ring {
+  width: 100%;
+  height: 100%;
+}
+
+.feedback-score-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-bar-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.feedback-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--primary), #a855f7);
+  transition: width 0.5s ease;
+}
+
+.feedback-session-select {
+  width: 100%;
+  max-width: 28rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.875rem;
+  color: var(--text);
+}
+
+.feedback-question-card {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.feedback-question-card[open] {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+}
+
+.feedback-question-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.feedback-question-summary::-webkit-details-marker {
+  display: none;
+}
+
+.feedback-q-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0.45;
+  width: 1.75rem;
+  flex-shrink: 0;
+}
+
+.feedback-q-score {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.875rem;
+}
+
+.feedback-question-body {
+  padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.feedback-hint {
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 15%, var(--border));
+}
+
+.feedback-empty {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+}
