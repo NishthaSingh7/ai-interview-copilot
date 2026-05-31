@@ -2,7 +2,12 @@ export {};
 
 declare global {
   interface SpeechRecognitionEvent extends Event {
+    resultIndex: number;
     results: SpeechRecognitionResultList;
+  }
+
+  interface SpeechRecognitionErrorEvent extends Event {
+    error: string;
   }
 
   interface SpeechRecognitionResultList {
@@ -30,7 +35,7 @@ declare global {
     stop(): void;
 
     onresult: (event: SpeechRecognitionEvent) => void;
-    onerror: (event: Event) => void;
+    onerror: (event: SpeechRecognitionErrorEvent) => void;
     onend: () => void;
   }
 
