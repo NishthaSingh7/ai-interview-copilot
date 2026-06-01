@@ -30,19 +30,29 @@ from services.usage_limits import get_usage_status
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _public_otp_hint(delivery: OtpSendResult) -> str | None:
+    if delivery.email_sent:
+        return None
+    if delivery.verification_code:
+        return "Enter the verification code below to continue."
+    return "Tap Resend code to get a new verification code."
+
+
 def _otp_response(
     delivery: OtpSendResult,
     *,
     success_message: str,
     failure_message: str,
 ) -> MessageResponse:
+    if delivery.log_detail:
+        print(f"📧 [OTP] {delivery.log_detail}")
     if delivery.email_sent:
         return MessageResponse(message=success_message, email_sent=True)
     return MessageResponse(
         message=failure_message,
         email_sent=False,
         verification_code=delivery.verification_code,
-        delivery_note=delivery.delivery_note,
+        delivery_note=_public_otp_hint(delivery),
     )
 
 

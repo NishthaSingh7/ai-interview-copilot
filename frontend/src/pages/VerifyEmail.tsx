@@ -12,7 +12,6 @@ type VerifyLocationState = {
   email?: string;
   verificationCode?: string;
   emailSent?: boolean;
-  deliveryNote?: string;
   accountExists?: boolean;
 };
 
@@ -20,7 +19,6 @@ type AuthMessageResponse = {
   message: string;
   email_sent?: boolean;
   verification_code?: string;
-  delivery_note?: string;
 };
 
 const VerifyEmail = () => {
@@ -35,11 +33,10 @@ const VerifyEmail = () => {
   const [displayCode, setDisplayCode] = useState(routeState.verificationCode || "");
   const [error, setError] = useState(
     routeState.accountExists
-      ? "An account with this email already exists. Use the code below or tap Resend code."
+      ? "An account with this email already exists. Enter your code or tap Resend code."
       : "",
   );
   const [message, setMessage] = useState("");
-  const [deliveryNote, setDeliveryNote] = useState(routeState.deliveryNote || "");
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -53,21 +50,11 @@ const VerifyEmail = () => {
   useEffect(() => {
     if (routeState.verificationCode) {
       applyVerificationCode(routeState.verificationCode);
+      setMessage("Enter the verification code below to continue.");
+    } else if (routeState.emailSent === true) {
+      setMessage("We sent a 6-digit code to your email. Check your spam folder too.");
     }
-    if (routeState.deliveryNote) {
-      setDeliveryNote(routeState.deliveryNote);
-    }
-    if (routeState.emailSent === true) {
-      setMessage("Check your inbox for the 6-digit code (and spam folder).");
-    } else if (routeState.verificationCode) {
-      setMessage("Email not sent for this address — enter the code shown above.");
-    }
-  }, [
-    routeState.verificationCode,
-    routeState.emailSent,
-    routeState.deliveryNote,
-    applyVerificationCode,
-  ]);
+  }, [routeState.verificationCode, routeState.emailSent, applyVerificationCode]);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
@@ -87,20 +74,13 @@ const VerifyEmail = () => {
       });
       if (res.data.verification_code) {
         applyVerificationCode(res.data.verification_code);
+        setMessage("Enter the verification code below to continue.");
+      } else {
+        setDisplayCode("");
+        setMessage("We sent a new code to your email. Check your spam folder too.");
       }
-      setDeliveryNote(
-        res.data.email_sent
-          ? ""
-          : res.data.delivery_note ||
-              "Check your inbox. If nothing arrives, use the code above.",
-      );
-      setMessage(
-        res.data.email_sent
-          ? "New code sent to your email."
-          : "Email not sent for this address — enter the code shown above.",
-      );
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Could not resend code."));
+      setError(getApiErrorMessage(err, "Could not resend code. Try again."));
     }
   };
 
@@ -157,12 +137,11 @@ const VerifyEmail = () => {
       badge="Almost there"
       title="Verify your email"
       subtitle={
-        displayCode && deliveryNote
-          ? "We tried to email your code; use the code below if it did not arrive."
-          : "Enter the 6-digit code from your email."
+        displayCode
+          ? "Use your verification code below to finish signing up."
+          : "Enter the 6-digit code we sent to your email."
       }
     >
-      {deliveryNote && <p className="auth-error mb-4">{deliveryNote}</p>}
       {displayCode && (
         <div className="auth-otp-fallback mb-4">
           <p className="auth-otp-fallback-label">Your verification code</p>
