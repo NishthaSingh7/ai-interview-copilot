@@ -1,0 +1,54 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+# API → Railway (same-origin proxy so auth works even if VITE_API_URL was missing at build)
+# Update this URL if your Railway domain changes.
+[[redirects]]
+  from = "/auth/*"
+  to = "https://ai-interview-copilot-production-aa82.up.railway.app/auth/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/upload-resume"
+  to = "https://ai-interview-copilot-production-aa82.up.railway.app/upload-resume"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/start-interview"
+  to = "https://ai-interview-copilot-production-aa82.up.railway.app/start-interview"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/gemini-budget-status"
+  to = "https://ai-interview-copilot-production-aa82.up.railway.app/gemini-budget-status"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/clean-transcript"
+  to = "https://ai-interview-copilot-production-aa82.up.railway.app/clean-transcript"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/evaluate-answer"
+  to = "https://ai-interview-copilot-production-aa82.up.railway.app/evaluate-answer"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/session-coaching"
+  to = "https://ai-interview-copilot-production-aa82.up.railway.app/session-coaching"
+  status = 200
+  force = true
+
+# SPA — must be last
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

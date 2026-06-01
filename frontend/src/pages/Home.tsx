@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import {
+  INTERVIEW_MODE_KEY,
+  JOB_DESCRIPTION_KEY,
+  QUESTION_LIMITS,
+  type InterviewMode,
+} from "../constants/interview";
 import { api } from "../services/api";
 import { loadHistory } from "../utils/interviewSession";
 
@@ -17,6 +24,7 @@ const roles = [
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [selectedRole, setSelectedRole] = useState("");
   const [resumeUploaded, setResumeUploaded] = useState(false);
@@ -24,17 +32,27 @@ const Home = () => {
   const [uploading, setUploading] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
   const [lastScore, setLastScore] = useState<number | null>(null);
+  const [interviewMode, setInterviewMode] = useState<InterviewMode>("full");
+  const [jobDescription, setJobDescription] = useState("");
+  const [showJd, setShowJd] = useState(false);
 
   useEffect(() => {
     const sections = localStorage.getItem("sections");
     const storedRole = localStorage.getItem("role");
     const storedFileName = localStorage.getItem("resumeFileName");
+    const storedMode = localStorage.getItem(INTERVIEW_MODE_KEY) as InterviewMode | null;
+    const storedJd = localStorage.getItem(JOB_DESCRIPTION_KEY);
 
     if (sections) {
       setResumeUploaded(true);
       if (storedFileName) setFileName(storedFileName);
     }
     if (storedRole) setSelectedRole(storedRole);
+    if (storedMode === "quick" || storedMode === "full") setInterviewMode(storedMode);
+    if (storedJd) {
+      setJobDescription(storedJd);
+      setShowJd(true);
+    }
 
     const history = loadHistory();
     setSessionCount(history.length);
@@ -47,6 +65,12 @@ const Home = () => {
   const handleStart = () => {
     if (!ready) return;
     localStorage.setItem("role", selectedRole);
+    localStorage.setItem(INTERVIEW_MODE_KEY, interviewMode);
+    if (jobDescription.trim()) {
+      localStorage.setItem(JOB_DESCRIPTION_KEY, jobDescription.trim());
+    } else {
+      localStorage.removeItem(JOB_DESCRIPTION_KEY);
+    }
     navigate("/interview");
   };
 
@@ -99,10 +123,29 @@ const Home = () => {
           built around your real experience.
         </p>
 
+        {!user && (
+          <div className="mb-8 p-5 rounded-xl border border-[var(--border)] bg-[var(--card)] flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold">Sign in to start interviewing</p>
+              <p className="text-sm opacity-60 mt-1">
+                Free account · email verification · one mock interview per day
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/register" className="interview-cta-primary px-6 py-2.5 text-sm">
+                Sign up
+              </Link>
+              <Link to="/login" className="interview-btn-ghost px-6 py-2.5 text-sm">
+                Log in
+              </Link>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           <StatCard value="9" label="Roles" />
           <StatCard value="Gemini" label="Question AI" sub="Personalized" />
-          <StatCard value="Live" label="Feedback" sub="Per answer" />
+          <StatCard value="Gemini" label="Evaluation" sub="Per answer" />
           <StatCard
             value={sessionCount > 0 ? String(sessionCount) : "0"}
             label="Sessions"
@@ -212,6 +255,58 @@ const Home = () => {
                 ))}
               </div>
             </section>
+
+            <section>
+              <h3 className="font-medium mb-3">Session length</h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <ModeCard
+                  active={interviewMode === "quick"}
+                  title="Quick practice"
+                  desc={`${QUESTION_LIMITS.quick} questions · ~2 min each`}
+                  onClick={() => setInterviewMode("quick")}
+                />
+                <ModeCard
+                  active={interviewMode === "full"}
+                  title="Full session"
+                  desc={`~${QUESTION_LIMITS.full} questions · ~3 min each`}
+                  onClick={() => setInterviewMode("full")}
+                />
+              </div>
+            </section>
+
+            <section>
+              <button
+                type="button"
+                onClick={() => setShowJd(!showJd)}
+                className="text-sm font-medium opacity-80 hover:opacity-100 flex items-center gap-2"
+              >
+                <span>{showJd ? "▼" : "▶"}</span>
+                Job description (optional)
+              </button>
+              {showJd && (
+                <div className="mt-3">
+                  <textarea
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    rows={5}
+                    placeholder="Paste the job posting here — questions will align with this role + your resume..."
+                    className="interview-textarea w-full"
+                  />
+                  {jobDescription.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setJobDescription("");
+                        localStorage.removeItem(JOB_DESCRIPTION_KEY);
+                      }}
+                      className="text-xs opacity-50 mt-2 hover:opacity-80"
+                    >
+                      Clear job description
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
           </div>
         </div>
 
@@ -231,7 +326,8 @@ const Home = () => {
           )}
           {ready && (
             <p className="text-sm text-green-600 dark:text-green-400">
-              You&apos;re set — {selectedRole}
+              {interviewMode === "quick" ? "Quick" : "Full"} session · {selectedRole}
+              {jobDescription.trim() ? " · JD added" : ""}
             </p>
           )}
         </div>
@@ -239,6 +335,27 @@ const Home = () => {
     </div>
   );
 };
+
+const ModeCard = ({
+  active,
+  title,
+  desc,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  desc: string;
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`home-role-chip text-left ${active ? "home-role-chip-active" : ""}`}
+  >
+    <p className="font-medium">{title}</p>
+    <p className="text-xs opacity-60 mt-1">{desc}</p>
+  </button>
+);
 
 const StatCard = ({
   value,
