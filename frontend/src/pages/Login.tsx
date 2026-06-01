@@ -4,7 +4,19 @@ import AuthField from "../components/auth/AuthField";
 import AuthShell from "../components/auth/AuthShell";
 import AuthTabs from "../components/auth/AuthTabs";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiErrors";
+import { normalizeEmail } from "../utils/email";
+
+type AuthMessageResponse = {
+  message: string;
+  verification_code?: string;
+};
+
+type AccountStatusResponse = {
+  exists: boolean;
+  email_verified: boolean;
+};
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,35 +29,77 @@ const Login = () => {
 
   const from = (location.state as { from?: string })?.from || "/interview";
 
+  const goToVerify = (normalizedEmail: string, verificationCode?: string) => {
+    setPendingEmail(normalizedEmail);
+    navigate("/verify-email", {
+      state: { email: normalizedEmail, verificationCode, emailSent: false },
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+    const normalizedEmail = normalizeEmail(email);
+
     try {
-      await login(email, password);
+      await login(normalizedEmail, password);
       navigate(from, { replace: true });
     } catch (err: unknown) {
       const ax = err as {
         response?: { status?: number; data?: { detail?: string | { code?: string } } };
       };
       const detail = ax.response?.data?.detail;
+
       if (
         ax.response?.status === 403 &&
         typeof detail === "object" &&
         detail?.code === "EMAIL_NOT_VERIFIED"
       ) {
-        setPendingEmail(email);
-        navigate("/verify-email", { state: { email } });
+        try {
+          const res = await api.post<AuthMessageResponse>("/auth/resend-otp", {
+            email: normalizedEmail,
+          });
+          goToVerify(normalizedEmail, res.data.verification_code);
+        } catch {
+          goToVerify(normalizedEmail);
+        }
         return;
       }
-      const message = getApiErrorMessage(
-        err,
-        typeof detail === "string" ? detail : "Invalid email or password.",
-      );
+
+      if (ax.response?.status === 401 && normalizedEmail) {
+        try {
+          const statusRes = await api.post<AccountStatusResponse>("/auth/account-status", {
+            email: normalizedEmail,
+          });
+          const { exists, email_verified } = statusRes.data;
+
+          if (!exists) {
+            setError("No account on this live site with that email. Sign up first (localhost accounts do not work here).");
+            return;
+          }
+
+          if (!email_verified) {
+            try {
+              const res = await api.post<AuthMessageResponse>("/auth/resend-otp", {
+                email: normalizedEmail,
+              });
+              goToVerify(normalizedEmail, res.data.verification_code);
+            } catch {
+              goToVerify(normalizedEmail);
+            }
+            return;
+          }
+
+          setError("Wrong password. Try again or sign up with a new email.");
+          return;
+        } catch {
+          /* fall through */
+        }
+      }
+
       setError(
-        ax.response?.status === 401
-          ? `${message} Accounts on this site are separate from localhost—use Sign up if you have not registered here yet, or verify your email if you just signed up.`
-          : message,
+        getApiErrorMessage(err, typeof detail === "string" ? detail : "Could not log in."),
       );
     } finally {
       setLoading(false);
@@ -56,7 +110,7 @@ const Login = () => {
     <AuthShell
       badge="Welcome back"
       title="Log in to your account"
-      subtitle="Use the email and password you registered on this site (not your local dev account)."
+      subtitle="You must sign up and verify on this site before logging in."
     >
       <AuthTabs />
       <form onSubmit={handleSubmit} className="space-y-4">
