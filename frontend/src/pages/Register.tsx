@@ -51,8 +51,8 @@ const Register = () => {
         state: {
           email: normalizedEmail,
           verificationCode: code || undefined,
-          emailSent: res.data.email_sent !== false,
-          deliveryNote: res.data.delivery_note,
+          emailSent: res.data.email_sent === true,
+          deliveryNote: res.data.email_sent ? undefined : res.data.delivery_note,
           prefilledDigits: code ? codeToDigits(code) : undefined,
         },
       });

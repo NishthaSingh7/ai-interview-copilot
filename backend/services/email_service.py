@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 
 import httpx
@@ -5,7 +6,6 @@ import httpx
 from config.settings import (
     EMAIL_FROM,
     OTP_EXPIRE_MINUTES,
-    OTP_FALLBACK_IN_API,
     RESEND_ALLOWED_TEST_EMAIL,
     RESEND_API_KEY,
 )
@@ -46,7 +46,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         print(f"📧 [Resend] Blocked test send to {recipient}: {blocked}")
         return OtpSendResult(
             email_sent=False,
-            verification_code=code if OTP_FALLBACK_IN_API else None,
+            verification_code=code,
             delivery_note=blocked,
         )
 
@@ -63,7 +63,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         print(f"📧 [Resend] {note} OTP for {recipient}: {code}")
         return OtpSendResult(
             email_sent=False,
-            verification_code=code if OTP_FALLBACK_IN_API else None,
+            verification_code=code,
             delivery_note=note,
         )
 
@@ -89,7 +89,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
                 print(f"📧 [OTP] Could not email {recipient}: {note}")
                 return OtpSendResult(
                     email_sent=False,
-                    verification_code=code if OTP_FALLBACK_IN_API else None,
+                    verification_code=code,
                     delivery_note=note,
                 )
             return OtpSendResult(email_sent=True)
@@ -98,19 +98,32 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         note = "Could not reach Resend. Try again in a minute."
         return OtpSendResult(
             email_sent=False,
-            verification_code=code if OTP_FALLBACK_IN_API else None,
+            verification_code=code,
             delivery_note=note,
         )
 
 
 def _parse_resend_error(status: int, body: str) -> str:
-    if status == 403 and "resend.dev" in body.lower():
+    try:
+        payload = json.loads(body)
+        api_msg = payload.get("message")
+        if isinstance(api_msg, str) and api_msg.strip():
+            if status == 403:
+                return (
+                    f"{api_msg} Until your domain is verified on resend.com/domains, "
+                    "use the 6-digit code shown on this page (not your inbox)."
+                )
+            return api_msg
+    except json.JSONDecodeError:
+        pass
+
+    if status == 403:
         return (
-            "Resend blocked this recipient. Verify a domain at https://resend.com/domains "
-            "and update EMAIL_FROM on Railway, or use your Resend account email for testing."
+            "This address cannot receive OTP by email yet (Resend test mode). "
+            "Use the code on this page, or verify a domain at https://resend.com/domains."
         )
     if status == 401:
         return "Invalid RESEND_API_KEY on Railway — create a new key at https://resend.com/api-keys"
     if status == 422:
-        return "Invalid EMAIL_FROM on Railway — use a verified sender address from Resend → Domains."
-    return "Resend could not send this email. Check Railway variables and https://resend.com/domains"
+        return "Invalid EMAIL_FROM on Railway — use a verified sender from Resend → Domains."
+    return "Email could not be sent. Use the code on this page to verify."
