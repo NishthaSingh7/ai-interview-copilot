@@ -1,19 +1,43 @@
+import type { InterviewMode } from "../../types/interview";
+import { QUESTION_LIMITS } from "../../constants/interview";
+import type { UsageToday } from "../../types/auth";
+import DailyLimitBanner from "./DailyLimitBanner";
+
 type Props = {
   role: string | null;
   hasResume: boolean;
+  hasJobDescription: boolean;
+  mode: InterviewMode;
   loading: boolean;
   stoppedMessage: string | null;
+  usageToday: UsageToday | null;
   onStart: () => void;
 };
 
 const InterviewLobby = ({
   role,
   hasResume,
+  hasJobDescription,
+  mode,
   loading,
   stoppedMessage,
+  usageToday,
   onStart,
 }: Props) => {
   const ready = Boolean(role && hasResume);
+  const questionCount = QUESTION_LIMITS[mode];
+  const limitReached = usageToday !== null && !usageToday.can_start_interview;
+
+  if (limitReached && usageToday) {
+    return (
+      <div className="interview-lobby">
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <span className="interview-badge-waiting">Waiting room</span>
+        </div>
+        <DailyLimitBanner usage={usageToday} />
+      </div>
+    );
+  }
 
   return (
     <div className="interview-lobby">
@@ -54,21 +78,35 @@ const InterviewLobby = ({
               </span>
             </h1>
             <p className="opacity-70 max-w-lg mx-auto lg:mx-0 mb-6">
-              Take a breath. When you&apos;re ready, we&apos;ll generate personalized questions
-              from your resume and walk you through them one at a time.
+              {mode === "quick"
+                ? `Quick ${questionCount}-question session with timed answers and Gemini feedback after each response.`
+                : `Full ~${questionCount}-question session with timed answers and Gemini feedback after each response.`}
             </p>
 
             <div className="interview-readiness inline-flex flex-col gap-2 text-sm text-left w-full max-w-sm mx-auto lg:mx-0">
               <ReadinessRow ok={hasResume} label="Resume uploaded" />
-              <ReadinessRow ok={Boolean(role)} label={role ? `Role: ${role}` : "Role selected on Home"} />
+              <ReadinessRow
+                ok={Boolean(role)}
+                label={role ? `Role: ${role}` : "Role selected on Home"}
+              />
+              <ReadinessRow
+                ok={hasJobDescription}
+                label={
+                  hasJobDescription
+                    ? "Job description linked"
+                    : "No job description (optional)"
+                }
+              />
+              <ReadinessRow
+                ok
+                label={`${mode === "quick" ? "Quick" : "Full"} mode · ${questionCount} questions`}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {stoppedMessage && (
-        <div className="interview-alert mb-6">{stoppedMessage}</div>
-      )}
+      {stoppedMessage && <div className="interview-alert mb-6">{stoppedMessage}</div>}
 
       {!ready && (
         <div className="interview-alert mb-6">
@@ -80,7 +118,7 @@ const InterviewLobby = ({
         <button
           type="button"
           onClick={onStart}
-          disabled={loading || !ready}
+          disabled={loading || !ready || limitReached}
           className="interview-cta-primary w-full sm:w-auto"
         >
           {loading ? (
@@ -93,19 +131,13 @@ const InterviewLobby = ({
           )}
         </button>
         <p className="text-xs opacity-50 text-center sm:text-left">
-          ~12 questions · mock feedback in phase 1
+          {questionCount} questions · Gemini evaluation
         </p>
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4">
-        <TipCard
-          title="One at a time"
-          desc="Focus on a single question — no overwhelm."
-        />
-        <TipCard
-          title="Instant feedback"
-          desc="Score and tips after each answer."
-        />
+        <TipCard title="One at a time" desc="Focus on a single question — no overwhelm." />
+        <TipCard title="Speak or type" desc="Use the mic — your words appear cleaned in the answer box." />
         <TipCard title="Stop anytime" desc="Not ready? End the session and return later." />
       </div>
     </div>

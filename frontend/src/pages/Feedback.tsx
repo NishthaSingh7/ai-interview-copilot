@@ -3,10 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import type { SessionSummary } from "../types/interview";
 import { loadHistory } from "../utils/interviewSession";
 
-const TAG_ORDER = ["PROJECT", "SKILL", "EXPERIENCE", "ROLE"] as const;
+const TAG_ORDER = ["SUMMARY", "PROJECT", "SKILL", "EXPERIENCE", "ROLE"] as const;
 
 const getTagColor = (tag: string) => {
   switch (tag) {
+    case "SUMMARY":
+      return "bg-cyan-500";
     case "PROJECT":
       return "bg-purple-500";
     case "SKILL":
@@ -66,7 +68,7 @@ const Feedback = () => {
           </span>
         </h1>
         <p className="opacity-60 mt-2 text-sm">
-          {summary.role} · {completedDate}
+          {summary.role} · {summary.mode === "quick" ? "Quick" : "Full"} session · {completedDate}
         </p>
       </header>
 
@@ -88,6 +90,30 @@ const Feedback = () => {
               </option>
             ))}
           </select>
+        </div>
+      )}
+
+      {(summary.coachingHeadline || summary.coachingText) && (
+        <div className="feedback-panel mb-8 p-5 border border-[var(--border)]">
+          <p className="text-xs uppercase tracking-wider opacity-50 mb-2">Coach summary</p>
+          {summary.coachingHeadline && (
+            <p className="font-semibold text-lg mb-2">{summary.coachingHeadline}</p>
+          )}
+          {summary.coachingText && (
+            <p className="text-sm opacity-80 leading-relaxed">{summary.coachingText}</p>
+          )}
+          {summary.coachingFocusAreas && summary.coachingFocusAreas.length > 0 && (
+            <ul className="mt-3 text-sm opacity-70 list-disc list-inside">
+              {summary.coachingFocusAreas.map((f) => (
+                <li key={f}>{f}</li>
+              ))}
+            </ul>
+          )}
+          {summary.sessionDegraded && (
+            <p className="text-xs mt-3 text-amber-700 dark:text-amber-300">
+              Some feedback used offline scoring when the AI API was unavailable.
+            </p>
+          )}
         </div>
       )}
 
@@ -196,7 +222,7 @@ const Feedback = () => {
       </div>
 
       <p className="mt-8 text-xs opacity-40 text-center">
-        Phase 1 uses mock scoring · Phase 2 will use Gemini for real evaluation
+        Scores powered by Gemini · tailored to your resume and role
       </p>
     </FeedbackShell>
   );
