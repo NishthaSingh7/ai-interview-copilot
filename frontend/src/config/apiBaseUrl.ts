@@ -6,21 +6,20 @@ function isLocalHost(): boolean {
   return h === "localhost" || h === "127.0.0.1";
 }
 
-/** API base URL for axios. Production Netlify can use same-origin + proxy (see netlify.toml). */
+/**
+ * Dev: VITE_API_URL or localhost:8000.
+ * Production (Netlify): same-origin — netlify.toml proxies /auth/* etc. to Railway.
+ */
 export function getApiBaseUrl(): string {
-  const fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-
-  // Built without VITE_API_URL: use same-origin; Netlify proxies /auth/* etc. to Railway
-  if (import.meta.env.PROD && !isLocalHost()) {
-    return "";
+  if (!import.meta.env.PROD || isLocalHost()) {
+    const fromEnv = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+    if (fromEnv) return fromEnv.replace(/\/$/, "");
+    return DEFAULT_DEV_URL;
   }
 
-  return DEFAULT_DEV_URL;
+  return "";
 }
 
 export function isMisconfiguredProductionApi(): boolean {
-  if (!import.meta.env.PROD || isLocalHost()) return false;
-  const url = getApiBaseUrl();
-  return url.includes("localhost") || url.includes("127.0.0.1");
+  return false;
 }

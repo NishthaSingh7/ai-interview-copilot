@@ -1,0 +1,11 @@
+# API → Railway (must be above SPA fallback)
+/auth/*  https://ai-interview-copilot-production-aa82.up.railway.app/auth/:splat  200
+/upload-resume  https://ai-interview-copilot-production-aa82.up.railway.app/upload-resume  200
+/start-interview  https://ai-interview-copilot-production-aa82.up.railway.app/start-interview  200
+/gemini-budget-status  https://ai-interview-copilot-production-aa82.up.railway.app/gemini-budget-status  200
+/clean-transcript  https://ai-interview-copilot-production-aa82.up.railway.app/clean-transcript  200
+/evaluate-answer  https://ai-interview-copilot-production-aa82.up.railway.app/evaluate-answer  200
+/session-coaching  https://ai-interview-copilot-production-aa82.up.railway.app/session-coaching  200
+
+# SPA
+/*  /index.html  200
