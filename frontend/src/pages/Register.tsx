@@ -7,7 +7,6 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiErrors";
 import { normalizeEmail } from "../utils/email";
-import { codeToDigits } from "../utils/otp";
 
 type AuthMessageResponse = {
   message: string;
@@ -52,8 +51,6 @@ const Register = () => {
           email: normalizedEmail,
           verificationCode: code || undefined,
           emailSent: res.data.email_sent === true,
-          deliveryNote: res.data.email_sent ? undefined : res.data.delivery_note,
-          prefilledDigits: code ? codeToDigits(code) : undefined,
         },
       });
     } catch (err: unknown) {

@@ -20,7 +20,7 @@ def _fallback_code(code: str) -> str | None:
 class OtpSendResult:
     email_sent: bool
     verification_code: str | None = None
-    delivery_note: str | None = None
+    log_detail: str | None = None  # server logs only — never show Resend errors to users
 
 
 def _uses_resend_test_domain() -> bool:
@@ -52,7 +52,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         return OtpSendResult(
             email_sent=False,
             verification_code=_fallback_code(code),
-            delivery_note=blocked,
+            log_detail=blocked,
         )
 
     subject = "Verify your email — Interview Copilot"
@@ -69,7 +69,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         return OtpSendResult(
             email_sent=False,
             verification_code=_fallback_code(code),
-            delivery_note=note,
+            log_detail=note,
         )
 
     try:
@@ -95,7 +95,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
                 return OtpSendResult(
                     email_sent=False,
                     verification_code=_fallback_code(code),
-                    delivery_note=note,
+                    log_detail=note,
                 )
             return OtpSendResult(email_sent=True)
     except Exception as exc:
@@ -104,31 +104,24 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         return OtpSendResult(
             email_sent=False,
             verification_code=_fallback_code(code),
-            delivery_note=note,
+            log_detail=note,
         )
 
 
 def _parse_resend_error(status: int, body: str) -> str:
+    """Internal log message only."""
     try:
         payload = json.loads(body)
         api_msg = payload.get("message")
         if isinstance(api_msg, str) and api_msg.strip():
-            if status == 403:
-                return (
-                    f"{api_msg} Until your domain is verified on resend.com/domains, "
-                    "use the 6-digit code shown on this page (not your inbox)."
-                )
-            return api_msg
+            return f"Resend {status}: {api_msg}"
     except json.JSONDecodeError:
         pass
 
     if status == 403:
-        return (
-            "This address cannot receive OTP by email yet (Resend test mode). "
-            "Use the code on this page, or verify a domain at https://resend.com/domains."
-        )
+        return "Resend 403: recipient not allowed on test sender (domain not verified)"
     if status == 401:
-        return "Invalid RESEND_API_KEY on Railway — create a new key at https://resend.com/api-keys"
+        return "Resend 401: invalid API key"
     if status == 422:
-        return "Invalid EMAIL_FROM on Railway — use a verified sender from Resend → Domains."
-    return "Email could not be sent. Use the code on this page to verify."
+        return "Resend 422: invalid from address"
+    return f"Resend {status}: send failed"

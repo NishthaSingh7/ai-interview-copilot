@@ -11,7 +11,6 @@ import { normalizeEmail } from "../utils/email";
 type AuthMessageResponse = {
   message: string;
   verification_code?: string;
-  delivery_note?: string;
   email_sent?: boolean;
 };
 
@@ -33,14 +32,13 @@ const Login = () => {
 
   const goToVerify = (
     normalizedEmail: string,
-    payload?: Pick<AuthMessageResponse, "verification_code" | "delivery_note" | "email_sent">,
+    payload?: Pick<AuthMessageResponse, "verification_code" | "email_sent">,
   ) => {
     setPendingEmail(normalizedEmail);
     navigate("/verify-email", {
       state: {
         email: normalizedEmail,
         verificationCode: payload?.verification_code,
-        deliveryNote: payload?.delivery_note,
         emailSent: payload?.email_sent,
       },
     });
