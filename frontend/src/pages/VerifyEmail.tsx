@@ -12,6 +12,7 @@ type VerifyLocationState = {
   email?: string;
   verificationCode?: string;
   emailSent?: boolean;
+  deliveryNote?: string;
   accountExists?: boolean;
 };
 
@@ -19,6 +20,7 @@ type AuthMessageResponse = {
   message: string;
   email_sent?: boolean;
   verification_code?: string;
+  delivery_note?: string;
 };
 
 const VerifyEmail = () => {
@@ -37,6 +39,7 @@ const VerifyEmail = () => {
       : "",
   );
   const [message, setMessage] = useState("");
+  const [deliveryNote, setDeliveryNote] = useState(routeState.deliveryNote || "");
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -50,11 +53,9 @@ const VerifyEmail = () => {
   useEffect(() => {
     if (routeState.verificationCode) {
       applyVerificationCode(routeState.verificationCode);
-      setMessage(
-        routeState.emailSent === false
-          ? "Email is not set up on the server — use the code below (not your inbox)."
-          : "Code sent to your email. You can also use the code below.",
-      );
+    }
+    if (routeState.emailSent !== false) {
+      setMessage("Check your inbox for the 6-digit code (and spam folder).");
     }
   }, [routeState.verificationCode, routeState.emailSent, applyVerificationCode]);
 
@@ -77,10 +78,11 @@ const VerifyEmail = () => {
       if (res.data.verification_code) {
         applyVerificationCode(res.data.verification_code);
       }
+      setDeliveryNote(res.data.delivery_note || "");
       setMessage(
         res.data.email_sent
-          ? "New code sent to your email. The code below works too."
-          : "Use the code below (email is not reaching inboxes until Resend domain is configured).",
+          ? "New code sent to your email."
+          : res.data.message || "Could not send email.",
       );
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Could not resend code."));
@@ -139,12 +141,9 @@ const VerifyEmail = () => {
     <AuthShell
       badge="Almost there"
       title="Verify your email"
-      subtitle={
-        displayCode
-          ? "Enter the 6-digit code below, then tap Verify."
-          : "Tap Resend code to get your verification code on screen."
-      }
+      subtitle="Enter the 6-digit code from your email."
     >
+      {deliveryNote && <p className="auth-error mb-4">{deliveryNote}</p>}
       {displayCode && (
         <div className="auth-otp-fallback mb-4">
           <p className="auth-otp-fallback-label">Your verification code</p>

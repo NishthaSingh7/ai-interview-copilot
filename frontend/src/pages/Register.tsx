@@ -13,6 +13,7 @@ type AuthMessageResponse = {
   message: string;
   email_sent?: boolean;
   verification_code?: string;
+  delivery_note?: string;
 };
 
 const Register = () => {
@@ -49,8 +50,9 @@ const Register = () => {
       navigate("/verify-email", {
         state: {
           email: normalizedEmail,
-          verificationCode: code,
+          verificationCode: code || undefined,
           emailSent: res.data.email_sent !== false,
+          deliveryNote: res.data.delivery_note,
           prefilledDigits: code ? codeToDigits(code) : undefined,
         },
       });
