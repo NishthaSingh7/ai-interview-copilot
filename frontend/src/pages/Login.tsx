@@ -11,6 +11,8 @@ import { normalizeEmail } from "../utils/email";
 type AuthMessageResponse = {
   message: string;
   verification_code?: string;
+  delivery_note?: string;
+  email_sent?: boolean;
 };
 
 type AccountStatusResponse = {
@@ -29,10 +31,18 @@ const Login = () => {
 
   const from = (location.state as { from?: string })?.from || "/interview";
 
-  const goToVerify = (normalizedEmail: string, verificationCode?: string) => {
+  const goToVerify = (
+    normalizedEmail: string,
+    payload?: Pick<AuthMessageResponse, "verification_code" | "delivery_note" | "email_sent">,
+  ) => {
     setPendingEmail(normalizedEmail);
     navigate("/verify-email", {
-      state: { email: normalizedEmail, verificationCode, emailSent: false },
+      state: {
+        email: normalizedEmail,
+        verificationCode: payload?.verification_code,
+        deliveryNote: payload?.delivery_note,
+        emailSent: payload?.email_sent,
+      },
     });
   };
 
@@ -60,7 +70,7 @@ const Login = () => {
           const res = await api.post<AuthMessageResponse>("/auth/resend-otp", {
             email: normalizedEmail,
           });
-          goToVerify(normalizedEmail, res.data.verification_code);
+          goToVerify(normalizedEmail, res.data);
         } catch {
           goToVerify(normalizedEmail);
         }
@@ -84,7 +94,7 @@ const Login = () => {
               const res = await api.post<AuthMessageResponse>("/auth/resend-otp", {
                 email: normalizedEmail,
               });
-              goToVerify(normalizedEmail, res.data.verification_code);
+              goToVerify(normalizedEmail, res.data);
             } catch {
               goToVerify(normalizedEmail);
             }

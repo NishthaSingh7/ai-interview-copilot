@@ -4,6 +4,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _normalize_email_from(raw: str) -> str:
+    value = (raw or "").strip()
+    if not value:
+        return "Interview Copilot <onboarding@resend.dev>"
+    if "<" not in value and "@" in value:
+        return f"Interview Copilot <{value}>"
+    return value
+
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() in ("1", "true", "yes")
@@ -17,9 +27,14 @@ JWT_SECRET = os.getenv("JWT_SECRET", "dev-change-me-in-production")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "10080"))
 
-# Email (Resend)
+# Email (Resend) — https://resend.com/domains required for all recipient addresses
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-EMAIL_FROM = os.getenv("EMAIL_FROM", "Interview Copilot <onboarding@resend.dev>")
+EMAIL_FROM = _normalize_email_from(os.getenv("EMAIL_FROM", ""))
+# With onboarding@resend.dev, Resend only delivers to this address until you verify a domain.
+RESEND_ALLOWED_TEST_EMAIL = os.getenv("RESEND_ALLOWED_TEST_EMAIL", "").lower().strip()
+# Emergency only: return OTP in API when email fails (off by default).
+OTP_FALLBACK_IN_API = os.getenv("OTP_FALLBACK_IN_API", "false").lower() in ("1", "true", "yes")
+
 OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
 OTP_MAX_VERIFY_ATTEMPTS = int(os.getenv("OTP_MAX_VERIFY_ATTEMPTS", "5"))
 OTP_RESEND_MAX_PER_HOUR = int(os.getenv("OTP_RESEND_MAX_PER_HOUR", "3"))
@@ -48,3 +63,9 @@ if DEMO_MODE:
 
 if not MONGODB_URI:
     print("⚠️  MONGODB_URI is not set — auth and usage limits require MongoDB")
+
+if RESEND_API_KEY and "resend.dev" in EMAIL_FROM.lower() and not RESEND_ALLOWED_TEST_EMAIL:
+    print(
+        "⚠️  Resend test sender (resend.dev): set RESEND_ALLOWED_TEST_EMAIL to your Resend "
+        "account email, or verify a domain at https://resend.com/domains"
+    )

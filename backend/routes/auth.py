@@ -23,11 +23,27 @@ from services.auth_service import (
     get_user_by_email,
     mark_email_verified,
 )
-from services.email_service import send_verification_otp
+from services.email_service import OtpSendResult, send_verification_otp
 from services.otp_service import count_recent_otp_sends, generate_otp_code, store_otp, verify_otp
 from services.usage_limits import get_usage_status
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _otp_response(
+    delivery: OtpSendResult,
+    *,
+    success_message: str,
+    failure_message: str,
+) -> MessageResponse:
+    if delivery.email_sent:
+        return MessageResponse(message=success_message, email_sent=True)
+    return MessageResponse(
+        message=failure_message,
+        email_sent=False,
+        verification_code=delivery.verification_code,
+        delivery_note=delivery.delivery_note,
+    )
 
 
 def _to_user_public(user: dict) -> UserPublic:
@@ -54,18 +70,10 @@ async def register(data: RegisterRequest):
     code = generate_otp_code()
     await store_otp(data.email, code)
     delivery = await send_verification_otp(data.email, code)
-
-    if delivery.email_sent:
-        return MessageResponse(
-            message="Account created. Check your email for a 6-digit verification code.",
-            email_sent=True,
-            verification_code=code,
-        )
-
-    return MessageResponse(
-        message="Account created. Use the code on screen to verify (email is not configured on the server yet).",
-        email_sent=False,
-        verification_code=code,
+    return _otp_response(
+        delivery,
+        success_message="Account created. Check your email for a 6-digit verification code.",
+        failure_message="Account created, but we could not email your verification code.",
     )
 
 
@@ -107,18 +115,10 @@ async def resend_otp(data: ResendOtpRequest):
     code = generate_otp_code()
     await store_otp(data.email, code)
     delivery = await send_verification_otp(data.email, code)
-
-    if delivery.email_sent:
-        return MessageResponse(
-            message="A new verification code was sent to your email. You can also use the code on screen.",
-            email_sent=True,
-            verification_code=code,
-        )
-
-    return MessageResponse(
-        message="Use the code on screen to verify (email could not be sent).",
-        email_sent=False,
-        verification_code=code,
+    return _otp_response(
+        delivery,
+        success_message="A new verification code was sent to your email.",
+        failure_message="We could not email a verification code.",
     )
 
 

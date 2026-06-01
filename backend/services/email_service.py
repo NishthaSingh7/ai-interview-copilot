@@ -2,17 +2,57 @@ from dataclasses import dataclass
 
 import httpx
 
-from config.settings import EMAIL_FROM, OTP_EXPIRE_MINUTES, RESEND_API_KEY
+from config.settings import (
+    EMAIL_FROM,
+    OTP_EXPIRE_MINUTES,
+    OTP_FALLBACK_IN_API,
+    RESEND_ALLOWED_TEST_EMAIL,
+    RESEND_API_KEY,
+)
 
 
 @dataclass
 class OtpSendResult:
     email_sent: bool
     verification_code: str | None = None
+    delivery_note: str | None = None
+
+
+def _uses_resend_test_domain() -> bool:
+    return "resend.dev" in EMAIL_FROM.lower()
+
+
+def _test_mode_recipient_blocked(recipient: str) -> str | None:
+    """Resend 403 when using onboarding@resend.dev to non-account emails."""
+    if not _uses_resend_test_domain():
+        return None
+    allowed = RESEND_ALLOWED_TEST_EMAIL
+    if not allowed:
+        return (
+            "Resend is on the test sender (onboarding@resend.dev). Set "
+            "RESEND_ALLOWED_TEST_EMAIL to your Resend login email on Railway, "
+            "or verify a custom domain at https://resend.com/domains and set EMAIL_FROM."
+        )
+    if recipient.lower().strip() != allowed:
+        return (
+            f"Resend test mode only sends OTP to {allowed}. "
+            f"Sign up with that email, or verify your domain at https://resend.com/domains "
+            f"and set EMAIL_FROM to e.g. Interview Copilot <noreply@yourdomain.com>."
+        )
+    return None
 
 
 async def send_verification_otp(email: str, code: str) -> OtpSendResult:
-    """Send OTP email. Never raises — returns code for in-app display when email fails."""
+    recipient = email.lower().strip()
+    blocked = _test_mode_recipient_blocked(recipient)
+    if blocked:
+        print(f"📧 [Resend] Blocked test send to {recipient}: {blocked}")
+        return OtpSendResult(
+            email_sent=False,
+            verification_code=code if OTP_FALLBACK_IN_API else None,
+            delivery_note=blocked,
+        )
+
     subject = "Verify your email — Interview Copilot"
     html = f"""
     <p>Your verification code is:</p>
@@ -22,8 +62,13 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
     """
 
     if not RESEND_API_KEY:
-        print(f"📧 [OTP] No RESEND_API_KEY — code for {email}: {code}")
-        return OtpSendResult(email_sent=False, verification_code=code)
+        note = "RESEND_API_KEY is not set on the server."
+        print(f"📧 [Resend] {note} OTP for {recipient}: {code}")
+        return OtpSendResult(
+            email_sent=False,
+            verification_code=code if OTP_FALLBACK_IN_API else None,
+            delivery_note=note,
+        )
 
     try:
         async with httpx.AsyncClient() as client:
@@ -35,7 +80,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
                 },
                 json={
                     "from": EMAIL_FROM,
-                    "to": [email],
+                    "to": [recipient],
                     "subject": subject,
                     "html": html,
                 },
@@ -43,14 +88,32 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
             )
             if response.status_code >= 400:
                 print("❌ Resend error:", response.status_code, response.text)
-                print(
-                    "   Tip: With onboarding@resend.dev you can only email your Resend account address "
-                    "until you verify a domain. Set EMAIL_FROM to a verified sender."
+                note = _parse_resend_error(response.status_code, response.text)
+                print(f"📧 [OTP] Could not email {recipient}: {note}")
+                return OtpSendResult(
+                    email_sent=False,
+                    verification_code=code if OTP_FALLBACK_IN_API else None,
+                    delivery_note=note,
                 )
-                print(f"📧 [OTP fallback] Verification code for {email}: {code}")
-                return OtpSendResult(email_sent=False, verification_code=code)
             return OtpSendResult(email_sent=True)
     except Exception as exc:
         print("❌ Resend request failed:", exc)
-        print(f"📧 [OTP fallback] Verification code for {email}: {code}")
-        return OtpSendResult(email_sent=False, verification_code=code)
+        note = "Could not reach Resend. Try again in a minute."
+        return OtpSendResult(
+            email_sent=False,
+            verification_code=code if OTP_FALLBACK_IN_API else None,
+            delivery_note=note,
+        )
+
+
+def _parse_resend_error(status: int, body: str) -> str:
+    if status == 403 and "resend.dev" in body.lower():
+        return (
+            "Resend blocked this recipient. Verify a domain at https://resend.com/domains "
+            "and update EMAIL_FROM on Railway, or use your Resend account email for testing."
+        )
+    if status == 401:
+        return "Invalid RESEND_API_KEY on Railway — create a new key at https://resend.com/api-keys"
+    if status == 422:
+        return "Invalid EMAIL_FROM on Railway — use a verified sender address from Resend → Domains."
+    return "Resend could not send this email. Check Railway variables and https://resend.com/domains"

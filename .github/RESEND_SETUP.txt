@@ -1,0 +1,51 @@
+Why Resend "does not work" for OTP
+==================================
+
+Your API key is fine. Resend returns 403 when:
+
+  FROM = onboarding@resend.dev  (test sender)
+  TO   = any email EXCEPT your Resend account login email
+
+So OTP never arrives in Gmail for random users until you verify a domain.
+
+----------------------------------------------------------------------
+OPTION A — Production (recommended): verify your domain
+----------------------------------------------------------------------
+
+1. https://resend.com/domains → Add domain (e.g. yourdomain.com)
+2. Add DNS records Resend shows → wait until Status = Verified
+3. Railway (soothing-creativity → Variables):
+
+   RESEND_API_KEY=re_xxxx          (from Resend → API Keys)
+   EMAIL_FROM=Interview Copilot <noreply@yourdomain.com>
+   RESEND_ALLOWED_TEST_EMAIL=      (delete or leave empty)
+
+4. Redeploy backend
+
+----------------------------------------------------------------------
+OPTION B — Quick test (no domain): only your Resend login email
+----------------------------------------------------------------------
+
+Railway variables:
+
+   RESEND_API_KEY=re_xxxx
+   EMAIL_FROM=Interview Copilot <onboarding@resend.dev>
+   RESEND_ALLOWED_TEST_EMAIL=riyanishtha@gmail.com
+
+Sign up on the live site using ONLY that email. OTP will arrive in inbox.
+
+----------------------------------------------------------------------
+Railway checklist (soothing-creativity → ai-interview-copilot)
+----------------------------------------------------------------------
+
+- RESEND_API_KEY must match Resend dashboard (not expired)
+- EMAIL_FROM must use a verified domain (Option A) or onboarding@resend.dev (Option B)
+- Do NOT set OTP_FALLBACK_IN_API=true unless you want codes in the API response
+
+----------------------------------------------------------------------
+Local backend/.env (same variables)
+----------------------------------------------------------------------
+
+RESEND_API_KEY=
+EMAIL_FROM=Interview Copilot <onboarding@resend.dev>
+RESEND_ALLOWED_TEST_EMAIL=your-resend-login@gmail.com
