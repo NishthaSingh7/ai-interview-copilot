@@ -8,6 +8,12 @@ import { api } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiErrors";
 import { normalizeEmail } from "../utils/email";
 
+type AuthMessageResponse = {
+  message: string;
+  email_sent?: boolean;
+  verification_code?: string;
+};
+
 const Register = () => {
   const navigate = useNavigate();
   const { setPendingEmail } = useAuth();
@@ -32,14 +38,31 @@ const Register = () => {
     setLoading(true);
     const normalizedEmail = normalizeEmail(email);
     try {
-      await api.post("/auth/register", {
+      const res = await api.post<AuthMessageResponse>("/auth/register", {
         email: normalizedEmail,
         password,
         name: name || undefined,
       });
       setPendingEmail(normalizedEmail);
-      navigate("/verify-email", { state: { email: normalizedEmail } });
+      navigate("/verify-email", {
+        state: {
+          email: normalizedEmail,
+          verificationCode: res.data.verification_code,
+          emailSent: res.data.email_sent !== false,
+        },
+      });
     } catch (err: unknown) {
+      const ax = err as { response?: { status?: number } };
+      if (ax.response?.status === 409) {
+        setPendingEmail(normalizedEmail);
+        navigate("/verify-email", {
+          state: {
+            email: normalizedEmail,
+            accountExists: true,
+          },
+        });
+        return;
+      }
       setError(getApiErrorMessage(err, "Registration failed. Try again."));
     } finally {
       setLoading(false);

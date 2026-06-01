@@ -118,6 +118,9 @@ class AuthTokenResponse(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+    email_sent: bool = True
+    # Present only when Resend could not deliver (user can still verify).
+    verification_code: Optional[str] = Field(default=None, max_length=6)
 
 
 class UsageTodayResponse(BaseModel):

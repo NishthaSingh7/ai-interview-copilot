@@ -51,15 +51,18 @@ async def register(data: RegisterRequest):
 
     code = generate_otp_code()
     await store_otp(data.email, code)
-    sent = await send_verification_otp(data.email, code)
-    if not sent:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Could not send verification email. Try again later.",
+    delivery = await send_verification_otp(data.email, code)
+
+    if delivery.email_sent:
+        return MessageResponse(
+            message="Account created. Check your email for a 6-digit verification code.",
+            email_sent=True,
         )
 
     return MessageResponse(
-        message="Account created. Check your email for a 6-digit verification code.",
+        message="Account created. Email could not be sent — use the code below to verify.",
+        email_sent=False,
+        verification_code=delivery.verification_code,
     )
 
 
@@ -100,14 +103,19 @@ async def resend_otp(data: ResendOtpRequest):
 
     code = generate_otp_code()
     await store_otp(data.email, code)
-    sent = await send_verification_otp(data.email, code)
-    if not sent:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Could not send email. Try again later.",
+    delivery = await send_verification_otp(data.email, code)
+
+    if delivery.email_sent:
+        return MessageResponse(
+            message="A new verification code was sent to your email.",
+            email_sent=True,
         )
 
-    return MessageResponse(message="A new verification code was sent to your email.")
+    return MessageResponse(
+        message="Email could not be sent — use the code below.",
+        email_sent=False,
+        verification_code=delivery.verification_code,
+    )
 
 
 @router.post("/login", response_model=AuthTokenResponse)
