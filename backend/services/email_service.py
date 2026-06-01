@@ -23,16 +23,13 @@ def _uses_resend_test_domain() -> bool:
 
 
 def _test_mode_recipient_blocked(recipient: str) -> str | None:
-    """Resend 403 when using onboarding@resend.dev to non-account emails."""
+    """Optional pre-check when RESEND_ALLOWED_TEST_EMAIL is set on Railway."""
     if not _uses_resend_test_domain():
         return None
     allowed = RESEND_ALLOWED_TEST_EMAIL
     if not allowed:
-        return (
-            "Resend is on the test sender (onboarding@resend.dev). Set "
-            "RESEND_ALLOWED_TEST_EMAIL to your Resend login email on Railway, "
-            "or verify a custom domain at https://resend.com/domains and set EMAIL_FROM."
-        )
+        # No pre-block — call Resend API (works for your Resend account email with just the API key).
+        return None
     if recipient.lower().strip() != allowed:
         return (
             f"Resend test mode only sends OTP to {allowed}. "
