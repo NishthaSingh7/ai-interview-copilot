@@ -1,3 +1,20 @@
+Hybrid OTP pipeline (already enabled in code)
+=============================================
+
+1. User signs up → server generates 6-digit OTP (stored in MongoDB)
+2. Server calls Resend API
+   - SUCCESS → email_sent: true → user checks inbox
+   - FAIL    → email_sent: false + verification_code in response → yellow box on verify page
+3. User verifies → same login, interview limits, Gemini usage either way
+
+Railway variable (default true, keep on until domain is verified):
+  OTP_EMAIL_FALLBACK_ENABLED=true
+
+After domain works for everyone, you can set OTP_EMAIL_FALLBACK_ENABLED=false
+to require inbox-only (optional).
+
+----------------------------------------------------------------------
+
 Why Resend "does not work" for OTP
 ==================================
 
