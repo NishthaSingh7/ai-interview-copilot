@@ -64,8 +64,8 @@ if DEMO_MODE:
 if not MONGODB_URI:
     print("⚠️  MONGODB_URI is not set — auth and usage limits require MongoDB")
 
-if RESEND_API_KEY and "resend.dev" in EMAIL_FROM.lower() and not RESEND_ALLOWED_TEST_EMAIL:
+if RESEND_API_KEY and "resend.dev" in EMAIL_FROM.lower() and RESEND_ALLOWED_TEST_EMAIL:
     print(
-        "⚠️  Resend test sender (resend.dev): set RESEND_ALLOWED_TEST_EMAIL to your Resend "
-        "account email, or verify a domain at https://resend.com/domains"
+        f"ℹ️  Resend test sender: OTP email limited to {RESEND_ALLOWED_TEST_EMAIL} "
+        "(verify a domain at https://resend.com/domains for all users)"
     )
