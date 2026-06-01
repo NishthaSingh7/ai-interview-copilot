@@ -6,8 +6,8 @@ Workflow file: .github/workflows/deploy-production.yml
 Runs on: every push to `main` (and manual "Run workflow" in Actions tab).
 
 What it does:
-  1. Deploys `backend/` to Railway
-  2. Builds `frontend/` and deploys to Netlify
+  1. Builds `frontend/` and deploys to Netlify
+  Backend: Railway project soothing-creativity auto-deploys `backend/` from GitHub (already connected).
 
 ----------------------------------------------------------------------
 ONE-TIME SETUP — GitHub secrets
@@ -16,13 +16,13 @@ ONE-TIME SETUP — GitHub secrets
 Repo → Settings → Secrets and variables → Actions → New repository secret
 
 1) RAILWAY_TOKEN
-   Railway → your project → Settings → Tokens → Create project token
-   Copy token (starts with something like a long hex string)
+   Railway project: soothing-creativity → Project Settings → Tokens
+   → Create project token (copy the full token)
 
 2) RAILWAY_SERVICE_ID
-   Railway → click your backend service → Settings
-   Or: run `railway service` locally after linking
-   Copy the Service ID (UUID)
+   soothing-creativity → production → service ai-interview-copilot → Settings
+   Copy the Service ID (UUID). Root directory should be: backend
+   Or: cd backend && railway link (pick soothing-creativity) && railway status
 
 3) NETLIFY_AUTH_TOKEN
    Netlify → User settings → Applications → Personal access tokens
@@ -40,11 +40,11 @@ If Netlify is already connected to GitHub with "Build on push":
   Netlify → Site configuration → Build & deploy → Continuous deployment
   → Stop builds (or disconnect) and let GitHub Actions deploy only.
 
-If Railway is connected to GitHub with auto-deploy on main:
-  Railway → service → Settings → disconnect GitHub deploy
-  OR remove the deploy-railway job and keep Railway native deploy only.
+Railway (soothing-creativity): keep GitHub auto-deploy on main — workflow does NOT redeploy Railway.
 
-Pick ONE path for each platform (native OR Actions), not both.
+Netlify: either Actions (this workflow) OR Netlify GitHub builds — not both.
+
+Pick ONE path for Netlify (native OR Actions), not both.
 
 ----------------------------------------------------------------------
 MANUAL RUN
