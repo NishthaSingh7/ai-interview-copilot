@@ -1,6 +1,11 @@
 import httpx
 
-from config.settings import EMAIL_FROM, OTP_EXPIRE_MINUTES, RESEND_API_KEY
+from config.settings import (
+    EMAIL_FROM,
+    OTP_EXPIRE_MINUTES,
+    OTP_LOG_ON_SEND_FAILURE,
+    RESEND_API_KEY,
+)
 
 
 async def send_verification_otp(email: str, code: str) -> bool:
@@ -33,5 +38,8 @@ async def send_verification_otp(email: str, code: str) -> bool:
         )
         if response.status_code >= 400:
             print("❌ Resend error:", response.status_code, response.text)
+            if OTP_LOG_ON_SEND_FAILURE:
+                print(f"📧 [OTP fallback] Verification code for {email}: {code}")
+                return True
             return False
         return True

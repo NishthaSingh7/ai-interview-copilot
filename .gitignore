@@ -29,3 +29,6 @@ npm-debug.log*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Local Netlify folder
+.netlify
