@@ -6,6 +6,7 @@ import AuthTabs from "../components/auth/AuthTabs";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiErrors";
+import { normalizeEmail } from "../utils/email";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -29,10 +30,15 @@ const Register = () => {
       return;
     }
     setLoading(true);
+    const normalizedEmail = normalizeEmail(email);
     try {
-      await api.post("/auth/register", { email, password, name: name || undefined });
-      setPendingEmail(email);
-      navigate("/verify-email", { state: { email } });
+      await api.post("/auth/register", {
+        email: normalizedEmail,
+        password,
+        name: name || undefined,
+      });
+      setPendingEmail(normalizedEmail);
+      navigate("/verify-email", { state: { email: normalizedEmail } });
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Registration failed. Try again."));
     } finally {

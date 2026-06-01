@@ -5,6 +5,7 @@ import AuthShell from "../components/auth/AuthShell";
 import { saveAuthToken, useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiErrors";
+import { normalizeEmail } from "../utils/email";
 
 const OTP_LENGTH = 6;
 
@@ -66,7 +67,7 @@ const VerifyEmail = () => {
     setLoading(true);
     try {
       const res = await api.post<{ access_token: string }>("/auth/verify-email", {
-        email,
+        email: normalizeEmail(email),
         otp,
       });
       saveAuthToken(res.data.access_token);
@@ -83,7 +84,9 @@ const VerifyEmail = () => {
     setError("");
     setMessage("");
     try {
-      const res = await api.post<{ message: string }>("/auth/resend-otp", { email });
+      const res = await api.post<{ message: string }>("/auth/resend-otp", {
+        email: normalizeEmail(email),
+      });
       setMessage(res.data.message);
       setDigits(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
