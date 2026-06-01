@@ -54,10 +54,20 @@ const VerifyEmail = () => {
     if (routeState.verificationCode) {
       applyVerificationCode(routeState.verificationCode);
     }
-    if (routeState.emailSent !== false) {
-      setMessage("Check your inbox for the 6-digit code (and spam folder).");
+    if (routeState.deliveryNote) {
+      setDeliveryNote(routeState.deliveryNote);
     }
-  }, [routeState.verificationCode, routeState.emailSent, applyVerificationCode]);
+    if (routeState.emailSent === true) {
+      setMessage("Check your inbox for the 6-digit code (and spam folder).");
+    } else if (routeState.verificationCode) {
+      setMessage("Email not sent for this address — enter the code shown above.");
+    }
+  }, [
+    routeState.verificationCode,
+    routeState.emailSent,
+    routeState.deliveryNote,
+    applyVerificationCode,
+  ]);
 
   useEffect(() => {
     inputRefs.current[0]?.focus();
@@ -78,11 +88,16 @@ const VerifyEmail = () => {
       if (res.data.verification_code) {
         applyVerificationCode(res.data.verification_code);
       }
-      setDeliveryNote(res.data.delivery_note || "");
+      setDeliveryNote(
+        res.data.email_sent
+          ? ""
+          : res.data.delivery_note ||
+              "Check your inbox. If nothing arrives, use the code above.",
+      );
       setMessage(
         res.data.email_sent
           ? "New code sent to your email."
-          : res.data.message || "Could not send email.",
+          : "Email not sent for this address — enter the code shown above.",
       );
     } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Could not resend code."));
