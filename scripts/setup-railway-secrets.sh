@@ -9,7 +9,7 @@ command -v "$GH" >/dev/null || GH="$REPO_ROOT/.tools/gh_2.93.0_macOS_arm64/bin/g
 echo "==> Railway login (complete in browser if it opens)..."
 railway whoami >/dev/null 2>&1 || railway login
 
-echo "==> Link this repo backend to your Railway project..."
+echo "==> Link backend/ to Railway project soothing-creativity (service: ai-interview-copilot)..."
 cd "$REPO_ROOT/backend"
 railway link
 

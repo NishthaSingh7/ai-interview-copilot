@@ -16,6 +16,7 @@ echo "==> Checking GitHub CLI..."
 "$GH" auth status >/dev/null || { echo "Run: gh auth login"; exit 1; }
 
 echo "==> Railway login (browser opens if needed)..."
+echo "    Project: soothing-creativity | Service: ai-interview-copilot | Root: backend"
 railway whoami >/dev/null 2>&1 || railway login
 
 echo "==> Netlify login (browser opens if needed)..."
@@ -26,7 +27,7 @@ echo "Paste your Railway PROJECT token (Settings → Tokens → Create token):"
 read -rs RAILWAY_TOKEN
 echo ""
 
-echo "Paste your Railway SERVICE ID (backend service → Settings, UUID):"
+echo "Paste RAILWAY_SERVICE_ID (soothing-creativity → ai-interview-copilot → Settings, UUID):"
 read -r RAILWAY_SERVICE_ID
 
 NETLIFY_SITE_ID="$(netlify sites:list --json 2>/dev/null | python3 -c "
