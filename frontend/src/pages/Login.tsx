@@ -38,8 +38,14 @@ const Login = () => {
         navigate("/verify-email", { state: { email } });
         return;
       }
+      const message = getApiErrorMessage(
+        err,
+        typeof detail === "string" ? detail : "Invalid email or password.",
+      );
       setError(
-        getApiErrorMessage(err, typeof detail === "string" ? detail : "Invalid email or password."),
+        ax.response?.status === 401
+          ? `${message} Accounts on this site are separate from localhost—use Sign up if you have not registered here yet, or verify your email if you just signed up.`
+          : message,
       );
     } finally {
       setLoading(false);
@@ -50,7 +56,7 @@ const Login = () => {
     <AuthShell
       badge="Welcome back"
       title="Log in to your account"
-      subtitle="Continue your interview prep — one free mock session per day."
+      subtitle="Use the email and password you registered on this site (not your local dev account)."
     >
       <AuthTabs />
       <form onSubmit={handleSubmit} className="space-y-4">

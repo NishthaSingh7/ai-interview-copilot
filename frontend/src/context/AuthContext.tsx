@@ -9,6 +9,7 @@ import {
 } from "react";
 import { api } from "../services/api";
 import type { UsageToday } from "../types/auth";
+import { normalizeEmail } from "../utils/email";
 
 const TOKEN_KEY = "access_token";
 const PENDING_EMAIL_KEY = "pending_verify_email";
@@ -84,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await api.post<{ access_token: string; user: AuthUser }>("/auth/login", {
-      email,
+      email: normalizeEmail(email),
       password,
     });
     setToken(res.data.access_token);
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const setPendingEmail = (email: string) => {
-    localStorage.setItem(PENDING_EMAIL_KEY, email);
+    localStorage.setItem(PENDING_EMAIL_KEY, normalizeEmail(email));
   };
 
   const getPendingEmail = () => localStorage.getItem(PENDING_EMAIL_KEY);
