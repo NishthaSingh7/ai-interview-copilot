@@ -1,0 +1,70 @@
+GitHub Actions — Deploy Production (main branch)
+=================================================
+
+Workflow file: .github/workflows/deploy-production.yml
+
+Runs on: every push to `main` (and manual "Run workflow" in Actions tab).
+
+What it does:
+  1. Deploys `backend/` to Railway
+  2. Builds `frontend/` and deploys to Netlify
+
+----------------------------------------------------------------------
+ONE-TIME SETUP — GitHub secrets
+----------------------------------------------------------------------
+
+Repo → Settings → Secrets and variables → Actions → New repository secret
+
+1) RAILWAY_TOKEN
+   Railway → your project → Settings → Tokens → Create project token
+   Copy token (starts with something like a long hex string)
+
+2) RAILWAY_SERVICE_ID
+   Railway → click your backend service → Settings
+   Or: run `railway service` locally after linking
+   Copy the Service ID (UUID)
+
+3) NETLIFY_AUTH_TOKEN
+   Netlify → User settings → Applications → Personal access tokens
+   Create token with deploy access
+
+4) NETLIFY_SITE_ID
+   Netlify → your site → Site configuration → Site information
+   Copy "Site ID" (UUID)
+
+----------------------------------------------------------------------
+AVOID DOUBLE DEPLOYS (recommended)
+----------------------------------------------------------------------
+
+If Netlify is already connected to GitHub with "Build on push":
+  Netlify → Site configuration → Build & deploy → Continuous deployment
+  → Stop builds (or disconnect) and let GitHub Actions deploy only.
+
+If Railway is connected to GitHub with auto-deploy on main:
+  Railway → service → Settings → disconnect GitHub deploy
+  OR remove the deploy-railway job and keep Railway native deploy only.
+
+Pick ONE path for each platform (native OR Actions), not both.
+
+----------------------------------------------------------------------
+MANUAL RUN
+----------------------------------------------------------------------
+
+GitHub → Actions → Deploy Production → Run workflow
+
+----------------------------------------------------------------------
+RAILWAY ENV VARS (still required on Railway dashboard)
+----------------------------------------------------------------------
+
+GEMINI_API_KEY, MONGODB_URI, JWT_SECRET, CORS_ORIGINS, RESEND_API_KEY, etc.
+GitHub Actions only uploads code — secrets stay in Railway / Netlify UI.
+
+CORS_ORIGINS example:
+  https://YOUR-SITE.netlify.app
+
+----------------------------------------------------------------------
+NETLIFY ENV (optional)
+----------------------------------------------------------------------
+
+VITE_API_URL is NOT required if using same-origin proxy (netlify.toml + _redirects).
+You can remove VITE_API_URL from Netlify if deploy uses latest main code.
