@@ -32,8 +32,12 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 EMAIL_FROM = _normalize_email_from(os.getenv("EMAIL_FROM", ""))
 # With onboarding@resend.dev, Resend only delivers to this address until you verify a domain.
 RESEND_ALLOWED_TEST_EMAIL = os.getenv("RESEND_ALLOWED_TEST_EMAIL", "").lower().strip()
-# Emergency only: return OTP in API when email fails (off by default).
-OTP_FALLBACK_IN_API = os.getenv("OTP_FALLBACK_IN_API", "false").lower() in ("1", "true", "yes")
+# Hybrid OTP: try Resend email first; if it fails, return code in API for on-screen verify.
+OTP_EMAIL_FALLBACK_ENABLED = os.getenv("OTP_EMAIL_FALLBACK_ENABLED", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
 OTP_MAX_VERIFY_ATTEMPTS = int(os.getenv("OTP_MAX_VERIFY_ATTEMPTS", "5"))

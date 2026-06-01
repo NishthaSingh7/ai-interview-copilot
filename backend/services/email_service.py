@@ -5,10 +5,15 @@ import httpx
 
 from config.settings import (
     EMAIL_FROM,
+    OTP_EMAIL_FALLBACK_ENABLED,
     OTP_EXPIRE_MINUTES,
     RESEND_ALLOWED_TEST_EMAIL,
     RESEND_API_KEY,
 )
+
+
+def _fallback_code(code: str) -> str | None:
+    return code if OTP_EMAIL_FALLBACK_ENABLED else None
 
 
 @dataclass
@@ -46,7 +51,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         print(f"📧 [Resend] Blocked test send to {recipient}: {blocked}")
         return OtpSendResult(
             email_sent=False,
-            verification_code=code,
+            verification_code=_fallback_code(code),
             delivery_note=blocked,
         )
 
@@ -63,7 +68,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         print(f"📧 [Resend] {note} OTP for {recipient}: {code}")
         return OtpSendResult(
             email_sent=False,
-            verification_code=code,
+            verification_code=_fallback_code(code),
             delivery_note=note,
         )
 
@@ -89,7 +94,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
                 print(f"📧 [OTP] Could not email {recipient}: {note}")
                 return OtpSendResult(
                     email_sent=False,
-                    verification_code=code,
+                    verification_code=_fallback_code(code),
                     delivery_note=note,
                 )
             return OtpSendResult(email_sent=True)
@@ -98,7 +103,7 @@ async def send_verification_otp(email: str, code: str) -> OtpSendResult:
         note = "Could not reach Resend. Try again in a minute."
         return OtpSendResult(
             email_sent=False,
-            verification_code=code,
+            verification_code=_fallback_code(code),
             delivery_note=note,
         )
 

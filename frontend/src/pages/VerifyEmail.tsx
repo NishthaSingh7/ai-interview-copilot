@@ -156,7 +156,11 @@ const VerifyEmail = () => {
     <AuthShell
       badge="Almost there"
       title="Verify your email"
-      subtitle="Enter the 6-digit code from your email."
+      subtitle={
+        displayCode && deliveryNote
+          ? "We tried to email your code; use the code below if it did not arrive."
+          : "Enter the 6-digit code from your email."
+      }
     >
       {deliveryNote && <p className="auth-error mb-4">{deliveryNote}</p>}
       {displayCode && (
