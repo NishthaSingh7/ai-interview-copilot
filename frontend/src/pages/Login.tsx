@@ -4,6 +4,7 @@ import AuthField from "../components/auth/AuthField";
 import AuthShell from "../components/auth/AuthShell";
 import AuthTabs from "../components/auth/AuthTabs";
 import { useAuth } from "../context/AuthContext";
+import { getApiErrorMessage } from "../utils/apiErrors";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -37,7 +38,9 @@ const Login = () => {
         navigate("/verify-email", { state: { email } });
         return;
       }
-      setError(typeof detail === "string" ? detail : "Invalid email or password.");
+      setError(
+        getApiErrorMessage(err, typeof detail === "string" ? detail : "Invalid email or password."),
+      );
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import AuthShell from "../components/auth/AuthShell";
 import AuthTabs from "../components/auth/AuthTabs";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
+import { getApiErrorMessage } from "../utils/apiErrors";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -33,8 +34,7 @@ const Register = () => {
       setPendingEmail(email);
       navigate("/verify-email", { state: { email } });
     } catch (err: unknown) {
-      const ax = err as { response?: { data?: { detail?: string } } };
-      setError(ax.response?.data?.detail || "Registration failed. Try again.");
+      setError(getApiErrorMessage(err, "Registration failed. Try again."));
     } finally {
       setLoading(false);
     }

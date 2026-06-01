@@ -4,6 +4,7 @@ import AuthField from "../components/auth/AuthField";
 import AuthShell from "../components/auth/AuthShell";
 import { saveAuthToken, useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
+import { getApiErrorMessage } from "../utils/apiErrors";
 
 const OTP_LENGTH = 6;
 
@@ -72,8 +73,7 @@ const VerifyEmail = () => {
       await refreshUser();
       navigate("/interview", { replace: true });
     } catch (err: unknown) {
-      const ax = err as { response?: { data?: { detail?: string } } };
-      setError(ax.response?.data?.detail || "Verification failed.");
+      setError(getApiErrorMessage(err, "Verification failed."));
     } finally {
       setLoading(false);
     }
@@ -88,8 +88,7 @@ const VerifyEmail = () => {
       setDigits(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } catch (err: unknown) {
-      const ax = err as { response?: { data?: { detail?: string } } };
-      setError(ax.response?.data?.detail || "Could not resend code.");
+      setError(getApiErrorMessage(err, "Could not resend code."));
     }
   };
 
