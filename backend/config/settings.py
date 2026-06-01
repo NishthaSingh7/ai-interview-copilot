@@ -20,6 +20,12 @@ JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "10080"))
 # Email (Resend)
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "Interview Copilot <onboarding@resend.dev>")
+# When Resend fails, log OTP to server logs so signup still works (check Railway logs).
+OTP_LOG_ON_SEND_FAILURE = os.getenv("OTP_LOG_ON_SEND_FAILURE", "true").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 OTP_EXPIRE_MINUTES = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
 OTP_MAX_VERIFY_ATTEMPTS = int(os.getenv("OTP_MAX_VERIFY_ATTEMPTS", "5"))
 OTP_RESEND_MAX_PER_HOUR = int(os.getenv("OTP_RESEND_MAX_PER_HOUR", "3"))
@@ -37,7 +43,7 @@ RATE_LIMIT_WINDOW_SECONDS = RATE_LIMIT_WINDOW_MINUTES * 60
 # CORS
 CORS_ORIGINS = os.getenv(
     "CORS_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173",
+    "http://localhost:5173,http://127.0.0.1:5173,https://ai-interview-co-pilot.netlify.app",
 ).split(",")
 
 if not GEMINI_API_KEY and not DEMO_MODE:
