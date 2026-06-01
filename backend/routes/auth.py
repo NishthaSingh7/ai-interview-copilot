@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from deps.auth import get_current_user
 from models.schemas import (
+    AccountStatusRequest,
+    AccountStatusResponse,
     AuthTokenResponse,
     LoginRequest,
     MessageResponse,
@@ -57,12 +59,13 @@ async def register(data: RegisterRequest):
         return MessageResponse(
             message="Account created. Check your email for a 6-digit verification code.",
             email_sent=True,
+            verification_code=code,
         )
 
     return MessageResponse(
-        message="Account created. Email could not be sent — use the code below to verify.",
+        message="Account created. Use the code on screen to verify (email is not configured on the server yet).",
         email_sent=False,
-        verification_code=delivery.verification_code,
+        verification_code=code,
     )
 
 
@@ -107,14 +110,26 @@ async def resend_otp(data: ResendOtpRequest):
 
     if delivery.email_sent:
         return MessageResponse(
-            message="A new verification code was sent to your email.",
+            message="A new verification code was sent to your email. You can also use the code on screen.",
             email_sent=True,
+            verification_code=code,
         )
 
     return MessageResponse(
-        message="Email could not be sent — use the code below.",
+        message="Use the code on screen to verify (email could not be sent).",
         email_sent=False,
-        verification_code=delivery.verification_code,
+        verification_code=code,
+    )
+
+
+@router.post("/account-status", response_model=AccountStatusResponse)
+async def account_status(data: AccountStatusRequest):
+    doc = await get_user_by_email(data.email)
+    if not doc:
+        return AccountStatusResponse(exists=False, email_verified=False)
+    return AccountStatusResponse(
+        exists=True,
+        email_verified=bool(doc.get("email_verified")),
     )
 
 

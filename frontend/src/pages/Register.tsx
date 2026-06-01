@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiErrors";
 import { normalizeEmail } from "../utils/email";
+import { codeToDigits } from "../utils/otp";
 
 type AuthMessageResponse = {
   message: string;
@@ -44,11 +45,13 @@ const Register = () => {
         name: name || undefined,
       });
       setPendingEmail(normalizedEmail);
+      const code = res.data.verification_code || "";
       navigate("/verify-email", {
         state: {
           email: normalizedEmail,
-          verificationCode: res.data.verification_code,
+          verificationCode: code,
           emailSent: res.data.email_sent !== false,
+          prefilledDigits: code ? codeToDigits(code) : undefined,
         },
       });
     } catch (err: unknown) {

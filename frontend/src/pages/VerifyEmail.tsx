@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthField from "../components/auth/AuthField";
 import AuthShell from "../components/auth/AuthShell";
@@ -6,8 +6,7 @@ import { saveAuthToken, useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import { getApiErrorMessage } from "../utils/apiErrors";
 import { normalizeEmail } from "../utils/email";
-
-const OTP_LENGTH = 6;
+import { codeToDigits, OTP_LENGTH } from "../utils/otp";
 
 type VerifyLocationState = {
   email?: string;
@@ -34,22 +33,59 @@ const VerifyEmail = () => {
   const [displayCode, setDisplayCode] = useState(routeState.verificationCode || "");
   const [error, setError] = useState(
     routeState.accountExists
-      ? "An account with this email already exists. Enter your code or tap Resend code."
+      ? "An account with this email already exists. Use the code below or tap Resend code."
       : "",
   );
-  const [message, setMessage] = useState(
-    routeState.emailSent === false || routeState.verificationCode
-      ? "We could not email your code (Resend setup). Use the code shown below."
-      : "",
-  );
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const otp = digits.join("");
 
+  const applyVerificationCode = useCallback((code: string) => {
+    setDisplayCode(code);
+    setDigits(codeToDigits(code));
+  }, []);
+
+  useEffect(() => {
+    if (routeState.verificationCode) {
+      applyVerificationCode(routeState.verificationCode);
+      setMessage(
+        routeState.emailSent === false
+          ? "Email is not set up on the server — use the code below (not your inbox)."
+          : "Code sent to your email. You can also use the code below.",
+      );
+    }
+  }, [routeState.verificationCode, routeState.emailSent, applyVerificationCode]);
+
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
+
+  const handleResend = async () => {
+    const normalized = normalizeEmail(email);
+    if (!normalized) {
+      setError("Enter your email first.");
+      return;
+    }
+    setError("");
+    setMessage("");
+    try {
+      const res = await api.post<AuthMessageResponse>("/auth/resend-otp", {
+        email: normalized,
+      });
+      if (res.data.verification_code) {
+        applyVerificationCode(res.data.verification_code);
+      }
+      setMessage(
+        res.data.email_sent
+          ? "New code sent to your email. The code below works too."
+          : "Use the code below (email is not reaching inboxes until Resend domain is configured).",
+      );
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, "Could not resend code."));
+    }
+  };
 
   const setDigit = (index: number, value: string) => {
     const d = value.replace(/\D/g, "").slice(-1);
@@ -71,10 +107,7 @@ const VerifyEmail = () => {
     const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
     if (!pasted) return;
     e.preventDefault();
-    const next = Array(OTP_LENGTH)
-      .fill("")
-      .map((_, i) => pasted[i] || "");
-    setDigits(next);
+    applyVerificationCode(pasted);
     const focusIdx = Math.min(pasted.length, OTP_LENGTH - 1);
     inputRefs.current[focusIdx]?.focus();
   };
@@ -102,35 +135,14 @@ const VerifyEmail = () => {
     }
   };
 
-  const handleResend = async () => {
-    setError("");
-    setMessage("");
-    try {
-      const res = await api.post<AuthMessageResponse>("/auth/resend-otp", {
-        email: normalizeEmail(email),
-      });
-      if (res.data.verification_code) {
-        setDisplayCode(res.data.verification_code);
-        setMessage("Email could not be sent. Use this verification code:");
-      } else {
-        setDisplayCode("");
-        setMessage(res.data.message);
-      }
-      setDigits(Array(OTP_LENGTH).fill(""));
-      inputRefs.current[0]?.focus();
-    } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Could not resend code."));
-    }
-  };
-
   return (
     <AuthShell
       badge="Almost there"
       title="Verify your email"
       subtitle={
         displayCode
-          ? "Enter the code below to finish signing up."
-          : "We sent a 6-digit code to your inbox. Check spam if you don't see it."
+          ? "Enter the 6-digit code below, then tap Verify."
+          : "Tap Resend code to get your verification code on screen."
       }
     >
       {displayCode && (

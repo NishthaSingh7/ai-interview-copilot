@@ -103,6 +103,15 @@ class ResendOtpRequest(BaseModel):
     email: EmailStr
 
 
+class AccountStatusRequest(BaseModel):
+    email: EmailStr
+
+
+class AccountStatusResponse(BaseModel):
+    exists: bool
+    email_verified: bool
+
+
 class UserPublic(BaseModel):
     id: str
     email: str
@@ -119,7 +128,7 @@ class AuthTokenResponse(BaseModel):
 class MessageResponse(BaseModel):
     message: str
     email_sent: bool = True
-    # Present only when Resend could not deliver (user can still verify).
+    # Always returned so users can verify when Resend/domain is not configured yet.
     verification_code: Optional[str] = Field(default=None, max_length=6)
 
 
