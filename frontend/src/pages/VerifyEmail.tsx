@@ -9,17 +9,39 @@ import { normalizeEmail } from "../utils/email";
 
 const OTP_LENGTH = 6;
 
+type VerifyLocationState = {
+  email?: string;
+  verificationCode?: string;
+  emailSent?: boolean;
+  accountExists?: boolean;
+};
+
+type AuthMessageResponse = {
+  message: string;
+  email_sent?: boolean;
+  verification_code?: string;
+};
+
 const VerifyEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { getPendingEmail, refreshUser } = useAuth();
-  const initialEmail =
-    (location.state as { email?: string })?.email || getPendingEmail() || "";
+  const routeState = (location.state as VerifyLocationState) || {};
+  const initialEmail = routeState.email || getPendingEmail() || "";
 
   const [email, setEmail] = useState(initialEmail);
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [displayCode, setDisplayCode] = useState(routeState.verificationCode || "");
+  const [error, setError] = useState(
+    routeState.accountExists
+      ? "An account with this email already exists. Enter your code or tap Resend code."
+      : "",
+  );
+  const [message, setMessage] = useState(
+    routeState.emailSent === false || routeState.verificationCode
+      ? "We could not email your code (Resend setup). Use the code shown below."
+      : "",
+  );
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -84,10 +106,16 @@ const VerifyEmail = () => {
     setError("");
     setMessage("");
     try {
-      const res = await api.post<{ message: string }>("/auth/resend-otp", {
+      const res = await api.post<AuthMessageResponse>("/auth/resend-otp", {
         email: normalizeEmail(email),
       });
-      setMessage(res.data.message);
+      if (res.data.verification_code) {
+        setDisplayCode(res.data.verification_code);
+        setMessage("Email could not be sent. Use this verification code:");
+      } else {
+        setDisplayCode("");
+        setMessage(res.data.message);
+      }
       setDigits(Array(OTP_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
     } catch (err: unknown) {
@@ -99,8 +127,18 @@ const VerifyEmail = () => {
     <AuthShell
       badge="Almost there"
       title="Verify your email"
-      subtitle="We sent a 6-digit code to your inbox. Check spam if you don't see it."
+      subtitle={
+        displayCode
+          ? "Enter the code below to finish signing up."
+          : "We sent a 6-digit code to your inbox. Check spam if you don't see it."
+      }
     >
+      {displayCode && (
+        <div className="auth-otp-fallback mb-4">
+          <p className="auth-otp-fallback-label">Your verification code</p>
+          <p className="auth-otp-fallback-code">{displayCode}</p>
+        </div>
+      )}
       <form onSubmit={handleVerify} className="space-y-5">
         <AuthField
           label="Email"
