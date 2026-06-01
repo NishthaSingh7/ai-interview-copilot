@@ -1,0 +1,30 @@
+Paste these in Railway → soothing-creativity → ai-interview-copilot → Variables → production
+Then click Redeploy (or wait for GitHub auto-deploy after push to main).
+
+Required (copy values from your local backend/.env or Resend/Mongo dashboards):
+
+  GEMINI_API_KEY=
+  MONGODB_URI=
+  MONGODB_DB_NAME=interview_copilot
+  JWT_SECRET=              (long random string — NOT "paste-the-long-random-string-here")
+  RESEND_API_KEY=
+  EMAIL_FROM=Interview Copilot <onboarding@resend.dev>
+  OTP_EMAIL_FALLBACK_ENABLED=true
+
+  CORS_ORIGINS=https://ai-interview-co-pilot.netlify.app
+
+Recommended:
+
+  GEMINI_MODEL=gemini-2.5-flash-lite
+  MAX_INTERVIEWS_PER_USER_PER_DAY=1
+  GLOBAL_GEMINI_DAILY_CAP=40
+
+Remove or leave empty (hybrid needs this unset for colleagues):
+
+  RESEND_ALLOWED_TEST_EMAIL=
+
+After Resend domain is Verified:
+
+  EMAIL_FROM=Interview Copilot <noreply@YOURDOMAIN.com>
+
+Do NOT create new Railway projects. Only this service.

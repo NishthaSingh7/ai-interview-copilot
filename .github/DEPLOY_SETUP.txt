@@ -1,3 +1,20 @@
+Railway policy (read this)
+==========================
+
+ONE project only: soothing-creativity
+ONE service only: ai-interview-copilot (repo folder: backend/)
+
+Do NOT:
+  - Create new Railway projects or services from this repo
+  - Run railway init / railway new / railway link / railway up in automation
+  - Use GitHub Actions to deploy Railway (disabled on purpose)
+
+Backend deploys via: Railway dashboard → soothing-creativity → GitHub → branch main, root backend/
+
+Agents/scripts must only change variables in that service or push code to GitHub.
+
+----------------------------------------------------------------------
+
 GitHub Actions — Deploy Production (main branch)
 =================================================
 
@@ -22,7 +39,7 @@ Repo → Settings → Secrets and variables → Actions → New repository secre
 2) RAILWAY_SERVICE_ID
    soothing-creativity → production → service ai-interview-copilot → Settings
    Copy the Service ID (UUID). Root directory should be: backend
-   Or: cd backend && railway link (pick soothing-creativity) && railway status
+   (Copy from dashboard — do not use railway link from other repos.)
 
 3) NETLIFY_AUTH_TOKEN
    Netlify → User settings → Applications → Personal access tokens

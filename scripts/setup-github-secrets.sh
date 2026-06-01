@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # One-time setup: push deploy secrets to GitHub Actions.
-# Requires: gh (logged in), railway CLI (logged in), netlify CLI (logged in)
+# Requires: gh (logged in), netlify CLI (logged in)
+#
+# RAILWAY: Do NOT run "railway init", "railway new", or "railway link" here.
+# Use only existing project soothing-creativity → service ai-interview-copilot.
+# Paste token + service id from the Railway dashboard (see .github/DEPLOY_SETUP.txt).
 
 set -euo pipefail
 
@@ -15,9 +19,8 @@ fi
 echo "==> Checking GitHub CLI..."
 "$GH" auth status >/dev/null || { echo "Run: gh auth login"; exit 1; }
 
-echo "==> Railway login (browser opens if needed)..."
+echo "==> Railway (dashboard only — no CLI, no new projects)"
 echo "    Project: soothing-creativity | Service: ai-interview-copilot | Root: backend"
-railway whoami >/dev/null 2>&1 || railway login
 
 echo "==> Netlify login (browser opens if needed)..."
 netlify status >/dev/null 2>&1 || netlify login
