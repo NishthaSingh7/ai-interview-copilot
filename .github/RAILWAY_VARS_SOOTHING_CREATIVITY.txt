@@ -23,6 +23,17 @@ Remove or leave empty (hybrid needs this unset for colleagues):
 
   RESEND_ALLOWED_TEST_EMAIL=
 
+Phase 3 — Grafana Cloud observability (see .github/GRAFANA_CLOUD_SETUP.txt):
+
+  OBSERVABILITY_ENABLED=true
+  GRAFANA_OTLP_ENDPOINT=https://otlp-gateway-prod-REGION.grafana.net/otlp
+  GRAFANA_OTLP_INSTANCE_ID=
+  GRAFANA_OTLP_TOKEN=
+  OTEL_SERVICE_NAME=ai-interview-copilot-backend
+  OTEL_DEPLOYMENT_ENVIRONMENT=production
+  LOG_LEVEL=INFO
+  OTEL_RESOURCE_ATTRIBUTES=service.instance.id=${{RAILWAY_REPLICA_ID}},railway.deployment.id=${{RAILWAY_DEPLOYMENT_ID}}
+
 After Resend domain is Verified:
 
   EMAIL_FROM=Interview Copilot <noreply@YOURDOMAIN.com>

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from concurrent.futures import ThreadPoolExecutor
 
 import google.generativeai as genai
@@ -7,6 +8,7 @@ from config.settings import GEMINI_API_KEY, GEMINI_MODEL
 
 _model = None
 _executor = ThreadPoolExecutor(max_workers=4)
+logger = logging.getLogger(__name__)
 
 
 def get_model():
@@ -27,7 +29,7 @@ async def generate_content_async(prompt: str):
     from services.gemini_budget import can_use_gemini, record_gemini_call
 
     if not await can_use_gemini():
-        print("⚠️ Global Gemini daily cap reached — using fallback")
+        logger.warning("gemini_daily_cap_reached using_fallback=true")
         return None
 
     model = get_model()
