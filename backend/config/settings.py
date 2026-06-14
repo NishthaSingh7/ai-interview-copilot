@@ -71,6 +71,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT = os.getenv(
 GRAFANA_OTLP_ENDPOINT = os.getenv("GRAFANA_OTLP_ENDPOINT", "").strip()
 GRAFANA_OTLP_INSTANCE_ID = os.getenv("GRAFANA_OTLP_INSTANCE_ID", "").strip()
 GRAFANA_OTLP_TOKEN = os.getenv("GRAFANA_OTLP_TOKEN", "").strip()
+OTEL_EXPORTER_OTLP_HEADERS = os.getenv("OTEL_EXPORTER_OTLP_HEADERS", "").strip()
 OTEL_SERVICE_NAME = os.getenv(
     "OTEL_SERVICE_NAME",
     os.getenv("RAILWAY_SERVICE_NAME", "ai-interview-copilot-backend"),

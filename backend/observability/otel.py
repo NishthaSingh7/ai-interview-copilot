@@ -167,7 +167,7 @@ def setup_observability(
 
     LoggingInstrumentor().instrument(set_logging_format=True)
     HTTPXClientInstrumentor().instrument()
-    FastAPIInstrumentor.instrument_app(app, excluded_urls="/")
+    FastAPIInstrumentor.instrument_app(app, excluded_urls="")
 
     _register_shutdown_handlers()
     _instrumented = True
