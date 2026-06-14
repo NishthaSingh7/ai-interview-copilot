@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from urllib.parse import unquote
 
 from config.settings import (
     GRAFANA_OTLP_ENDPOINT,
@@ -10,6 +11,7 @@ from config.settings import (
     GRAFANA_OTLP_TOKEN,
     OTEL_DEPLOYMENT_ENVIRONMENT,
     OTEL_EXPORTER_OTLP_ENDPOINT,
+    OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
@@ -22,10 +24,23 @@ def resolve_otlp_endpoint() -> str:
     return OTEL_EXPORTER_OTLP_ENDPOINT
 
 
+def _parse_otlp_headers_env(raw: str) -> dict[str, str] | None:
+    if not raw:
+        return None
+    headers: dict[str, str] = {}
+    for part in raw.split(","):
+        part = part.strip()
+        if not part or "=" not in part:
+            continue
+        key, value = part.split("=", 1)
+        headers[key.strip()] = unquote(value.strip())
+    return headers or None
+
+
 def resolve_otlp_headers() -> dict[str, str] | None:
     if GRAFANA_OTLP_INSTANCE_ID and GRAFANA_OTLP_TOKEN:
         return grafana_cloud_headers(GRAFANA_OTLP_INSTANCE_ID, GRAFANA_OTLP_TOKEN)
-    return None
+    return _parse_otlp_headers_env(OTEL_EXPORTER_OTLP_HEADERS)
 
 
 def resolve_resource_attributes() -> dict[str, str]:
