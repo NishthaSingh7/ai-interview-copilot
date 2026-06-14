@@ -1,4 +1,5 @@
 from typing import Annotated
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -28,6 +29,7 @@ from services.otp_service import count_recent_otp_sends, generate_otp_code, stor
 from services.usage_limits import get_usage_status
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 
 
 def _public_otp_hint(delivery: OtpSendResult) -> str | None:
@@ -45,7 +47,7 @@ def _otp_response(
     failure_message: str,
 ) -> MessageResponse:
     if delivery.log_detail:
-        print(f"📧 [OTP] {delivery.log_detail}")
+        logger.info("otp_delivery detail=%s email_sent=%s", delivery.log_detail, delivery.email_sent)
     if delivery.email_sent:
         return MessageResponse(message=success_message, email_sent=True)
     return MessageResponse(
@@ -80,6 +82,7 @@ async def register(data: RegisterRequest):
     code = generate_otp_code()
     await store_otp(data.email, code)
     delivery = await send_verification_otp(data.email, code)
+    logger.info("auth_register email=%s otp_sent=%s", data.email, delivery.email_sent)
     return _otp_response(
         delivery,
         success_message="Account created. Check your email for a 6-digit verification code.",
@@ -91,11 +94,14 @@ async def register(data: RegisterRequest):
 async def verify_email(data: VerifyEmailRequest):
     ok, msg = await verify_otp(data.email, data.otp)
     if not ok:
+        logger.warning("auth_verify_email_failed email=%s reason=%s", data.email, msg)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
     doc = await mark_email_verified(data.email)
     if not doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    logger.info("auth_verify_email_success email=%s", data.email)
 
     user = {
         "id": str(doc["_id"]),
@@ -117,6 +123,7 @@ async def resend_otp(data: ResendOtpRequest):
 
     recent = await count_recent_otp_sends(data.email, hours=1)
     if recent >= OTP_RESEND_MAX_PER_HOUR:
+        logger.warning("auth_resend_otp_rate_limited email=%s recent_sends=%s", data.email, recent)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many codes sent. Wait an hour and try again.",
@@ -125,6 +132,7 @@ async def resend_otp(data: ResendOtpRequest):
     code = generate_otp_code()
     await store_otp(data.email, code)
     delivery = await send_verification_otp(data.email, code)
+    logger.info("auth_resend_otp email=%s otp_sent=%s", data.email, delivery.email_sent)
     return _otp_response(
         delivery,
         success_message="A new verification code was sent to your email.",
@@ -147,12 +155,14 @@ async def account_status(data: AccountStatusRequest):
 async def login(data: LoginRequest):
     user = await authenticate_user(data.email, data.password)
     if not user:
+        logger.warning("auth_login_failed email=%s reason=invalid_credentials", data.email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password.",
         )
 
     if not user.get("email_verified"):
+        logger.warning("auth_login_blocked email=%s reason=email_not_verified", data.email)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -162,6 +172,7 @@ async def login(data: LoginRequest):
         )
 
     token = create_access_token(user["id"])
+    logger.info("auth_login_success email=%s", data.email)
     return AuthTokenResponse(access_token=token, user=_to_user_public(user))
 
 

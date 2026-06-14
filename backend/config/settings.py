@@ -59,6 +59,30 @@ CORS_ORIGINS = os.getenv(
     "http://localhost:5173,http://127.0.0.1:5173,https://ai-interview-co-pilot.netlify.app",
 ).split(",")
 
+# Observability (local LGTM: http://localhost:4318 | Grafana Cloud: see GRAFANA_CLOUD_SETUP.txt)
+OBSERVABILITY_ENABLED = os.getenv("OBSERVABILITY_ENABLED", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+OTEL_EXPORTER_OTLP_ENDPOINT = os.getenv(
+    "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318"
+)
+GRAFANA_OTLP_ENDPOINT = os.getenv("GRAFANA_OTLP_ENDPOINT", "").strip()
+GRAFANA_OTLP_INSTANCE_ID = os.getenv("GRAFANA_OTLP_INSTANCE_ID", "").strip()
+GRAFANA_OTLP_TOKEN = os.getenv("GRAFANA_OTLP_TOKEN", "").strip()
+OTEL_SERVICE_NAME = os.getenv(
+    "OTEL_SERVICE_NAME",
+    os.getenv("RAILWAY_SERVICE_NAME", "ai-interview-copilot-backend"),
+)
+OTEL_SERVICE_VERSION = os.getenv("OTEL_SERVICE_VERSION", "0.1.0")
+OTEL_DEPLOYMENT_ENVIRONMENT = os.getenv(
+    "OTEL_DEPLOYMENT_ENVIRONMENT",
+    os.getenv("RAILWAY_ENVIRONMENT_NAME", "local"),
+)
+OTEL_RESOURCE_ATTRIBUTES = os.getenv("OTEL_RESOURCE_ATTRIBUTES", "")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
 if not GEMINI_API_KEY and not DEMO_MODE:
     print("⚠️  GEMINI_API_KEY is not set. Copy backend/.env.example to backend/.env")
 

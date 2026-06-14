@@ -1,0 +1,27 @@
+# Local LGTM observability stack for AI Interview Copilot (Phase 1).
+# Requires OrbStack or Docker. Start: docker compose up -d
+#
+# Grafana UI:  http://localhost:3000  (admin / admin on first login)
+# OTLP HTTP:   http://localhost:4318  (point backend OTEL_EXPORTER_OTLP_ENDPOINT here)
+# OTLP gRPC:   localhost:4317
+
+services:
+  otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: interview-copilot-otel-lgtm
+    ports:
+      - "3000:3000"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - otel-lgtm-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  otel-lgtm-data:

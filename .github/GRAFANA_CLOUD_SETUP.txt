@@ -1,0 +1,133 @@
+Phase 3 — Grafana Cloud + Railway OTLP (production observability)
+================================================================
+
+Goal: Export logs, metrics, and traces from the Railway backend to Grafana Cloud
+so you can query production incidents (OTP failures, /start-interview errors, etc.)
+from Grafana and Cursor MCP.
+
+Note: This is OTLP (OpenTelemetry Protocol), not OTP. OTP auth events are included
+in logs once observability is enabled.
+
+----------------------------------------------------------------------
+STEP 1 — Create Grafana Cloud (free tier)
+----------------------------------------------------------------------
+
+1. Go to https://grafana.com/auth/sign-up/create-user
+2. Create a stack (pick a region close to your users)
+3. Note your stack URL, e.g. https://YOURSTACK.grafana.net
+
+----------------------------------------------------------------------
+STEP 2 — Get OTLP credentials from Grafana Cloud
+----------------------------------------------------------------------
+
+In Grafana Cloud portal:
+
+1. Open your stack → **Connections** → **Add new connection**
+2. Search **OpenTelemetry** → **Configure**
+3. Copy:
+   - **OTLP endpoint** (e.g. https://otlp-gateway-prod-us-central-0.grafana.net/otlp)
+   - **Instance ID** (numeric, e.g. 123456)
+   - **Access token** (create one with `traces:write`, `metrics:write`, `logs:write`)
+
+Keep the token secret — never commit it to git.
+
+----------------------------------------------------------------------
+STEP 3 — Add variables on Railway
+----------------------------------------------------------------------
+
+Railway → soothing-creativity → ai-interview-copilot → Variables → production
+
+Add these (paste real values from Step 2):
+
+  OBSERVABILITY_ENABLED=true
+  GRAFANA_OTLP_ENDPOINT=https://otlp-gateway-prod-REGION.grafana.net/otlp
+  GRAFANA_OTLP_INSTANCE_ID=YOUR_INSTANCE_ID
+  GRAFANA_OTLP_TOKEN=glc_YOUR_TOKEN
+  OTEL_SERVICE_NAME=ai-interview-copilot-backend
+  OTEL_DEPLOYMENT_ENVIRONMENT=production
+  LOG_LEVEL=INFO
+
+Optional (Railway auto-injects RAILWAY_* — these improve trace correlation):
+
+  OTEL_RESOURCE_ATTRIBUTES=service.instance.id=${{RAILWAY_REPLICA_ID}},railway.deployment.id=${{RAILWAY_DEPLOYMENT_ID}}
+
+Do NOT set OTEL_EXPORTER_OTLP_ENDPOINT to localhost in production.
+GRAFANA_OTLP_ENDPOINT takes priority when set.
+
+Click **Deploy** / wait for GitHub auto-deploy after pushing code to main.
+
+----------------------------------------------------------------------
+STEP 4 — Verify data in Grafana Cloud
+----------------------------------------------------------------------
+
+1. Open https://YOURSTACK.grafana.net
+2. **Explore → Loki**:
+   {service_name="ai-interview-copilot-backend"} |= "auth_"
+3. **Explore → Tempo**:
+   {resource.service.name="ai-interview-copilot-backend"}
+4. Trigger prod traffic: register, OTP verify, start interview
+
+Example OTP / auth log queries:
+
+  {service_name="ai-interview-copilot-backend"} |= "auth_verify_email_failed"
+  {service_name="ai-interview-copilot-backend"} |= "auth_resend_otp_rate_limited"
+  {service_name="ai-interview-copilot-backend"} |= "otp_delivery"
+
+Example interview error query:
+
+  {service_name="ai-interview-copilot-backend"} |= "start_interview" |~ "(?i)error|failed"
+
+----------------------------------------------------------------------
+STEP 5 — Point Cursor MCP at Grafana Cloud (optional)
+----------------------------------------------------------------------
+
+Option A — Hosted Grafana Cloud MCP (no local Docker):
+
+  Edit ~/.cursor/mcp.json or project .cursor/mcp.json:
+
+  {
+    "mcpServers": {
+      "grafana": {
+        "url": "https://mcp.grafana.com/mcp",
+        "headers": {
+          "X-Grafana-URL": "https://YOURSTACK.grafana.net"
+        }
+      }
+    }
+  }
+
+Option B — Docker mcp-grafana against your cloud stack:
+
+  Run: GRAFANA_URL=https://YOURSTACK.grafana.net ./scripts/setup-grafana-mcp.sh
+
+Then enable grafana in Cursor → Settings → MCP.
+
+----------------------------------------------------------------------
+TROUBLESHOOTING
+----------------------------------------------------------------------
+
+- No data in Grafana Cloud:
+  - Check Railway logs for "Observability enabled"
+  - Verify GRAFANA_OTLP_INSTANCE_ID + GRAFANA_OTLP_TOKEN are set
+  - Ensure OBSERVABILITY_ENABLED=true
+
+- 401 from OTLP gateway:
+  - Regenerate Grafana Cloud access token
+  - Confirm Instance ID matches your stack
+
+- Railway redeploy drops last spans:
+  - Code calls tracer shutdown on SIGTERM (already implemented)
+
+- Still need Railway platform logs:
+  - Railway → service → Deployments → View logs (stdout until OTLP is live)
+
+----------------------------------------------------------------------
+LOCAL vs PRODUCTION
+----------------------------------------------------------------------
+
+| Env        | OBSERVABILITY_ENABLED | Endpoint                          |
+|------------|----------------------|-----------------------------------|
+| Local Mac  | true                 | http://localhost:4318 (OrbStack)  |
+| Railway    | true                 | GRAFANA_OTLP_ENDPOINT (Cloud)     |
+
+Keep OBSERVABILITY_ENABLED=false locally if you are not running the LGTM stack.

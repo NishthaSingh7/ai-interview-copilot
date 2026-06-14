@@ -1,3 +1,4 @@
+import logging
 import uuid
 from typing import Annotated
 
@@ -24,6 +25,7 @@ from services.transcript_cleaner import clean_transcript
 from services.usage_limits import can_start_interview, record_interview_start
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/gemini-budget-status")
@@ -55,7 +57,12 @@ async def start_interview(
         gemini_ok = await can_use_gemini()
         force_fallback = not gemini_ok
 
-        print("🎯 ROLE:", role, "| MODE:", mode, "| user:", user["email"])
+        logger.info(
+            "start_interview role=%s mode=%s user_email=%s",
+            role,
+            mode,
+            user["email"],
+        )
 
         using_fallback = force_fallback
         raw_output = await generate_questions(
@@ -63,7 +70,7 @@ async def start_interview(
         )
 
         if not raw_output:
-            print("⚠️ Empty output — fallback questions")
+            logger.warning("start_interview empty_gemini_output using_fallback=true")
             formatted = get_fallback_questions(sections, role, mode, limit)
             using_fallback = True
         else:
@@ -86,7 +93,12 @@ async def start_interview(
         session_id = str(uuid.uuid4())
         await record_interview_start(user["id"], mode, session_id)
 
-        print("🧠 QUESTIONS:", len(formatted), "| fallback:", using_fallback)
+        logger.info(
+            "start_interview complete question_count=%s using_fallback=%s session_id=%s",
+            len(formatted),
+            using_fallback,
+            session_id,
+        )
 
         return StartInterviewResponse(
             questions=formatted,
@@ -97,7 +109,7 @@ async def start_interview(
     except HTTPException:
         raise
     except Exception as e:
-        print("❌ BACKEND ERROR:", e)
+        logger.exception("start_interview failed error=%s", e)
         limit = 5 if data.mode == "quick" else 12
         sections = data.sections.model_dump()
         return StartInterviewResponse(
