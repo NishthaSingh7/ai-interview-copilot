@@ -8,8 +8,9 @@ __pycache__/
 .tools/
 .cursor/
 
-# Local docs only — never push markdown to GitHub
+# Local docs only — never push internal markdown to GitHub
 *.md
+!README.md
 
 # Node / frontend
 node_modules/
